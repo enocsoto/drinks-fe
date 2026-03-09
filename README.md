@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# drinks-fe
 
-## Getting Started
+Frontend Next.js para el billar que vende bebidas con y sin alcohol en Colombia.
+Consume la API de [drinks-be](../drinks-be).
 
-First, run the development server:
+## Stack
+
+- **Next.js 15** (App Router)
+- **React 19**
+- **TypeScript 5** (strict mode)
+- **Tailwind CSS 4**
+- **ESLint + Prettier + Husky + commitlint**
+
+## Setup
 
 ```bash
+# 1. Instalar dependencias
+npm install
+
+# 2. Copiar variables de entorno
+cp .env.template .env.local
+# Editar .env.local con la URL del backend
+
+# 3. Iniciar servidor de desarrollo
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+La app estará disponible en `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Variables de entorno
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable              | Descripción                    | Default                     |
+| --------------------- | ------------------------------ | --------------------------- |
+| `NEXT_PUBLIC_API_URL` | URL base del backend drinks-be | `http://localhost:3001/api` |
 
-## Learn More
+## Comandos
 
-To learn more about Next.js, take a look at the following resources:
+| Comando          | Descripción                      |
+| ---------------- | -------------------------------- |
+| `npm run dev`    | Servidor de desarrollo           |
+| `npm run build`  | Build de producción              |
+| `npm run start`  | Servidor de producción           |
+| `npm run lint`   | Linting con ESLint               |
+| `npm run format` | Formatear con Prettier           |
+| `npm run commit` | Commit convencional (commitlint) |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Estructura
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+├── app/
+│   ├── (auth)/login/     # Módulo de autenticación
+│   ├── (dashboard)/      # Rutas protegidas (requieren JWT)
+│   └── layout.tsx        # Root layout
+├── components/ui/        # Componentes UI reutilizables
+├── hooks/                # Custom hooks
+├── lib/
+│   ├── api/              # API services (drinks-be)
+│   ├── utils/            # Utilidades
+│   └── constants.ts      # Constantes globales
+├── middleware.ts          # Protección de rutas JWT
+└── types/                # Tipos TypeScript globales
+```
 
-## Deploy on Vercel
+## Módulos
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Los módulos se agregan en `src/app/(dashboard)/[modulo]/` y se van implementando
+uno por uno según solicitud del usuario.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Skills y reglas (Cursor / AI Agent)
+
+Ver `.cursor/rules/` y `.cursor/skills/` para convenciones y patrones del proyecto.
+Ver `AGENT.md` para guía de buenas prácticas y `AGENTS.md` para guía de agentes AI.

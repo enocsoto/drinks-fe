@@ -1,26 +1,212 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
+/* ─── Design Tokens ─── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Brand - Red/White (light mode) */
+  --brand-primary: #dc2626; /* red-600  */
+  --brand-primary-h: #b91c1c; /* red-700  */
+  --brand-primary-l: #ef4444; /* red-500  */
+  --brand-accent: #fef2f2; /* red-50   */
+
+  /* Surfaces */
+  --bg-base: #ffffff;
+  --bg-surface: #f9fafb;
+  --bg-elevated: #ffffff;
+  --bg-overlay: rgba(0, 0, 0, 0.45);
+
+  /* Text */
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --text-on-brand: #ffffff;
+
+  /* Border / Divider */
+  --border: #e5e7eb;
+  --border-focus: var(--brand-primary);
+
+  /* Sidebar */
+  --sidebar-bg: #1f2937; /* gray-800 */
+  --sidebar-text: #f9fafb;
+  --sidebar-active: var(--brand-primary);
+  --sidebar-hover: rgba(220, 38, 38, 0.12);
+
+  /* Status */
+  --success: #16a34a;
+  --warning: #d97706;
+  --error: #dc2626;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.14);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ─── Dark Blue Mode ─── */
+[data-theme='dark'] {
+  --brand-primary: #ef4444; /* red-500 pops on dark bg */
+  --brand-primary-h: #dc2626;
+  --brand-primary-l: #f87171;
+  --brand-accent: rgba(239, 68, 68, 0.12);
+
+  --bg-base: #0f172a; /* slate-900 */
+  --bg-surface: #1e293b; /* slate-800 */
+  --bg-elevated: #334155; /* slate-700 */
+  --bg-overlay: rgba(0, 0, 0, 0.6);
+
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-on-brand: #ffffff;
+
+  --border: #334155;
+  --border-focus: var(--brand-primary);
+
+  --sidebar-bg: #0f172a;
+  --sidebar-text: #e2e8f0;
+  --sidebar-active: var(--brand-primary);
+  --sidebar-hover: rgba(239, 68, 68, 0.15);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ─── Base Styles ─── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), 'Inter', system-ui, sans-serif;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ─── Focus Ring ─── */
+*:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ─── Animations ─── */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(220, 38, 38, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.4s ease both;
+}
+.animate-slideIn {
+  animation: slideIn 0.3s ease both;
+}
+.animate-pulse-ring {
+  animation: pulse-ring 2s infinite;
+}
+
+/* ─── Select: icono desplegable más a la izquierda ─── */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1.25rem;
+  padding-right: 1.75rem;
+}
+[data-theme='dark'] select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394A3B8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+}
+
+/* ─── Recharts tooltips: contraste en dark mode ─── */
+[data-theme='dark'] .recharts-default-tooltip {
+  background: #1e293b !important;
+  border: 1px solid #475569 !important;
+  border-radius: 0.5rem;
+  color: #f1f5f9 !important;
+  padding: 0.5rem 0.75rem;
+  font-size: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+[data-theme='dark'] .recharts-default-tooltip .recharts-tooltip-label {
+  color: #f1f5f9 !important;
+}
+[data-theme='dark'] .recharts-default-tooltip .recharts-tooltip-item {
+  color: #e2e8f0 !important;
+}
+
+/* ─── Utility: glass card ─── */
+.glass {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  border-radius: 1rem;
+}
+
+/* ─── Sidebar transition ─── */
+.sidebar-transition {
+  transition:
+    width 0.25s ease,
+    transform 0.25s ease;
+}
+
+@theme inline {
+  --color-background: var(--bg-base);
+  --color-foreground: var(--text-primary);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
 }
