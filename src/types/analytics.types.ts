@@ -9,6 +9,8 @@ export interface BreakdownItem {
 export interface BeverageBreakdownItem {
   beverageId: string;
   name: string;
+  containerType?: string;
+  containerSize?: string;
   count: number;
   amount: number;
   percentage: number;

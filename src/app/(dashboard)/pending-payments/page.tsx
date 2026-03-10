@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import {
   getPendingPayments,
   createPendingPayment,
   updatePendingPayment,
   deletePendingPayment,
+  openPendingPaymentPdf,
 } from '@/lib/api/pending-payments.api';
 import type { PendingPaymentDto, CreatePendingPaymentDto } from '@/types/pending-payment.types';
 import { DrinkType, DRINK_TYPE_LABELS } from '@/types/beverage.types';
@@ -46,6 +48,7 @@ export default function PendingPaymentsPage() {
   const [error, setError] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<PendingPaymentDto | null>(null);
+  const [payingItem, setPayingItem] = useState<PendingPaymentDto | null>(null);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -121,9 +124,14 @@ export default function PendingPaymentsPage() {
     };
     setSaving(true);
     createPendingPayment(dto)
-      .then(() => {
+      .then((created) => {
         setShowCreate(false);
         load();
+        if (created?.id) {
+          openPendingPaymentPdf(created.id).catch(() => {
+            // PDF opcional; no bloquear si falla
+          });
+        }
       })
       .catch((err) => setError(err?.message ?? 'Error al crear.'))
       .finally(() => setSaving(false));
@@ -162,6 +170,39 @@ export default function PendingPaymentsPage() {
         load();
       })
       .catch((err) => setError(err?.message ?? 'Error al actualizar.'))
+      .finally(() => setSaving(false));
+  };
+
+  const handlePayAbono = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!payingItem) return;
+    setError(null);
+    const form = e.currentTarget;
+    const abonoInput = (form.querySelector('[name="abonoAmount"]') as HTMLInputElement)?.value;
+    const abono = Math.max(0, Number(abonoInput) || 0);
+    const currentPaid = payingItem.amountPaid ?? 0;
+    const newAmountPaid = Math.min(payingItem.amount, currentPaid + abono);
+
+    setSaving(true);
+    updatePendingPayment(payingItem.id, { amountPaid: newAmountPaid })
+      .then(() => {
+        setPayingItem(null);
+        load();
+      })
+      .catch((err) => setError(err?.message ?? 'Error al registrar abono.'))
+      .finally(() => setSaving(false));
+  };
+
+  const handlePayComplete = () => {
+    if (!payingItem) return;
+    setError(null);
+    setSaving(true);
+    updatePendingPayment(payingItem.id, { amountPaid: payingItem.amount })
+      .then(() => {
+        setPayingItem(null);
+        load();
+      })
+      .catch((err) => setError(err?.message ?? 'Error al registrar pago completo.'))
       .finally(() => setSaving(false));
   };
 
@@ -269,6 +310,11 @@ export default function PendingPaymentsPage() {
                         <td className="px-5 py-3 text-[var(--text-secondary)]">{formatDate(item.debtDate)}</td>
                         <td className="px-5 py-3 text-right font-medium text-[var(--text-primary)]">
                           {formatCOP(item.amount)}
+                          {(item.amountPaid ?? 0) > 0 && (
+                            <span className="block text-xs text-[var(--text-muted)]">
+                              Pagado: {formatCOP(item.amountPaid ?? 0)} — Saldo: {formatCOP(Math.max(0, item.amount - (item.amountPaid ?? 0)))}
+                            </span>
+                          )}
                         </td>
                         <td className="px-5 py-3 text-[var(--text-secondary)]">
                           {summaryTags(item).length ? summaryTags(item).join(', ') : '—'}
@@ -280,7 +326,28 @@ export default function PendingPaymentsPage() {
                           {item.description || '—'}
                         </td>
                         <td className="px-5 py-3 text-right">
-                          <div className="flex items-center justify-end gap-2">
+                          <div className="flex items-center justify-end gap-2 flex-wrap">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openPendingPaymentPdf(item.id)}
+                              aria-label={`Imprimir comanda de ${item.personName}`}
+                            >
+                              Imprimir
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setPayingItem(item);
+                                setError(null);
+                              }}
+                              aria-label={`Registrar abono de ${item.personName}`}
+                            >
+                              Abonar
+                            </Button>
                             <Button
                               type="button"
                               variant="outline"
@@ -455,15 +522,17 @@ export default function PendingPaymentsPage() {
         </div>
       )}
 
-      {/* Modal editar */}
-      {editing && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--bg-overlay)] overflow-y-auto"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-pending-title"
-        >
-          <div className="glass rounded-xl border border-[var(--border)] w-full max-w-lg shadow-lg my-8">
+      {/* Modal editar — Portal para centrar en viewport tras scroll */}
+      {editing &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--bg-overlay)] overflow-y-auto"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-pending-title"
+          >
+            <div className="glass rounded-xl border border-[var(--border)] w-full max-w-lg shadow-lg my-8">
             <div className="px-5 py-4 border-b border-[var(--border)]">
               <h2 id="edit-pending-title" className="text-lg font-semibold text-[var(--text-primary)]">
                 Editar pago pendiente
@@ -604,8 +673,73 @@ export default function PendingPaymentsPage() {
               </div>
             </form>
           </div>
-        </div>
-      )}
+        </div>,
+          document.body,
+        )}
+
+      {/* Modal registrar abono / pago completo — Portal para centrar en viewport tras scroll */}
+      {payingItem &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--bg-overlay)] overflow-y-auto"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="pay-modal-title"
+          >
+            <div className="glass rounded-xl border border-[var(--border)] w-full max-w-sm shadow-lg my-8">
+            <div className="px-5 py-4 border-b border-[var(--border)]">
+              <h2 id="pay-modal-title" className="text-lg font-semibold text-[var(--text-primary)]">
+                Registrar pago — {payingItem.personName}
+              </h2>
+              <p className="text-sm text-[var(--text-muted)] mt-1">
+                Total: {formatCOP(payingItem.amount)} — Pagado: {formatCOP(payingItem.amountPaid ?? 0)} — Saldo: {formatCOP(Math.max(0, payingItem.amount - (payingItem.amountPaid ?? 0)))}
+              </p>
+            </div>
+            <form onSubmit={handlePayAbono} className="p-5 space-y-4">
+              <div>
+                <label htmlFor="abonoAmount" className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
+                  Monto del abono (COP)
+                </label>
+                <Input
+                  id="abonoAmount"
+                  name="abonoAmount"
+                  type="number"
+                  min={0}
+                  step={100}
+                  placeholder="0"
+                  className="w-full"
+                />
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <Button type="submit" disabled={saving}>
+                  {saving ? 'Guardando...' : 'Registrar abono'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={handlePayComplete}
+                  disabled={saving || (payingItem.amountPaid ?? 0) >= payingItem.amount}
+                >
+                  Pagar completo
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setPayingItem(null);
+                    setError(null);
+                  }}
+                  disabled={saving}
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>,
+          document.body,
+        )}
     </AuthGuard>
   );
 }

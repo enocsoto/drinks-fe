@@ -27,9 +27,10 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   const p = path.startsWith('/') ? path.slice(1) : path;
   const url = `${base}/${p}`;
 
+  const hasBody = init?.body != null && init.body !== '';
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
     Accept: 'application/json',
+    ...(hasBody && { 'Content-Type': 'application/json' }),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
   const mergedInit: RequestInit = { ...init, headers: { ...headers, ...init?.headers } };

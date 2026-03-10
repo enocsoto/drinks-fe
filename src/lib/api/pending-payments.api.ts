@@ -1,3 +1,4 @@
+import { API_URL, TOKEN_KEY } from '@/lib/constants';
 import { apiFetch } from './api-client';
 import type {
   PendingPaymentDto,
@@ -62,4 +63,39 @@ export async function deletePendingPayment(id: string): Promise<void> {
   return apiFetch<void>(`/pending-payments/${encodeURIComponent(id)}`, {
     method: 'DELETE',
   });
+}
+
+/** Descarga el PDF comanda para imprimir (reimprimible). */
+export async function openPendingPaymentPdf(id: string): Promise<void> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null;
+  const base = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
+  const url = `${base}/pending-payments/${encodeURIComponent(id)}/pdf`;
+
+  const res = await fetch(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || res.statusText || 'Error al obtener el PDF');
+  }
+
+  const blob = await res.blob();
+  const contentType = res.headers.get('Content-Type') ?? blob.type;
+  if (blob.size === 0) {
+    throw new Error('El PDF recibido está vacío. Comprueba que el backend esté en marcha.');
+  }
+  if (!contentType.includes('pdf')) {
+    throw new Error(`Se esperaba un PDF pero se recibió: ${contentType}`);
+  }
+
+  const blobUrl = URL.createObjectURL(new Blob([await blob.arrayBuffer()], { type: 'application/pdf' }));
+  const a = document.createElement('a');
+  a.href = blobUrl;
+  a.download = `comanda-pago-pendiente-${id}.pdf`;
+  a.rel = 'noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(blobUrl);
 }

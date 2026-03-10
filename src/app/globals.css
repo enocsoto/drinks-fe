@@ -8,20 +8,20 @@
   --brand-primary-l: #ef4444; /* red-500  */
   --brand-accent: #fef2f2; /* red-50   */
 
-  /* Surfaces */
-  --bg-base: #ffffff;
-  --bg-surface: #f9fafb;
-  --bg-elevated: #ffffff;
+  /* Surfaces - tono crema en lugar de blanco puro */
+  --bg-base: #faf9f7;
+  --bg-surface: #f5f3f0;
+  --bg-elevated: #fffefb;
   --bg-overlay: rgba(0, 0, 0, 0.45);
 
   /* Text */
-  --text-primary: #111827;
-  --text-secondary: #6b7280;
-  --text-muted: #9ca3af;
+  --text-primary: #1c1917;
+  --text-secondary: #57534e;
+  --text-muted: #78716c;
   --text-on-brand: #ffffff;
 
-  /* Border / Divider */
-  --border: #e5e7eb;
+  /* Border / Divider - gris cálido para combinar con crema */
+  --border: #e7e5e4;
   --border-focus: var(--brand-primary);
 
   /* Sidebar */

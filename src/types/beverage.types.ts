@@ -52,6 +52,10 @@ export interface BeverageDto {
   isActive?: boolean;
   /** Ruta de la imagen (ej. /beverages/agua-cristal.png) */
   imageUrl?: string;
+  /** Cantidad en inventario (unidades) */
+  stock?: number;
+  /** Precio de coste unitario en COP (para margen de ganancia) */
+  costPrice?: number;
 }
 
 const BEVERAGES_IMG_BASE = '/beverages';
@@ -89,6 +93,8 @@ export interface CreateBeverageDto {
   containerType?: ContainerType | string;
   containerSize?: string;
   imageUrl?: string;
+  stock?: number;
+  costPrice?: number;
 }
 
 export interface UpdateBeverageDto {
@@ -98,6 +104,8 @@ export interface UpdateBeverageDto {
   containerType?: ContainerType | string;
   containerSize?: string;
   imageUrl?: string;
+  stock?: number;
+  costPrice?: number;
 }
 
 /** Respuesta paginada del listado de bebidas */

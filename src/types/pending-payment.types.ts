@@ -6,6 +6,7 @@ export interface PendingPaymentDto {
   nickname: string;
   debtDate: string;
   amount: number;
+  amountPaid?: number;
   drinkTypes: DrinkType[];
   hasGloves: boolean;
   hasPendingGames: boolean;
@@ -28,6 +29,7 @@ export interface UpdatePendingPaymentDto {
   nickname?: string;
   debtDate?: string;
   amount?: number;
+  amountPaid?: number;
   drinkTypes?: DrinkType[];
   hasGloves?: boolean;
   hasPendingGames?: boolean;

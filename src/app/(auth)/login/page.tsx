@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { Button } from '@/components/ui/button';
@@ -33,7 +34,19 @@ export default function LoginPage() {
       await login({ document: documentId, password });
       setLoginSuccess(true);
     } catch (err) {
-      setError((err as Error)?.message || 'Error de credenciales o conexión al servidor.');
+      const message = (err as Error)?.message || 'Error de credenciales o conexión al servidor.';
+
+      if (message.startsWith('No se pudo conectar con el servidor')) {
+        setError('');
+        toast.error(message, {
+          duration: 7000,
+        });
+      } else {
+        setError(message);
+        toast.error(message, {
+          duration: 5000,
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }

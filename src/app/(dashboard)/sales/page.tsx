@@ -112,6 +112,7 @@ export default function SalesPage() {
   }, [beverageSearch]);
 
   const addToCart = (beverage: BeverageDto) => {
+    if ((beverage.stock ?? 0) <= 0) return;
     setCart((prev) => {
       const next = new Map(prev);
       const existing = next.get(beverage.id);
@@ -129,6 +130,7 @@ export default function SalesPage() {
       const next = new Map(prev);
       const item = next.get(beverageId);
       if (!item) return prev;
+      if (delta > 0 && (item.beverage.stock ?? 0) < item.quantity + delta) return prev;
       const newQty = item.quantity + delta;
       if (newQty <= 0) {
         next.delete(beverageId);
@@ -355,34 +357,39 @@ export default function SalesPage() {
               )}
               {!loading && !beveragesError && beverages.length > 0 && (
                 <>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {beverages.map((b) => {
                       const cartItem = cart.get(b.id);
                       const qty = cartItem?.quantity ?? 0;
                       const isInCart = qty > 0;
+                      const hasStock = (b.stock ?? 0) > 0;
                       return (
                         <div
                           key={b.id}
                           role="button"
-                          tabIndex={0}
-                          onClick={() => addToCart(b)}
+                          tabIndex={hasStock ? 0 : -1}
+                          onClick={() => hasStock && addToCart(b)}
                           onKeyDown={(e) => {
+                            if (!hasStock) return;
                             if (e.key === 'Enter' || e.key === ' ') {
                               e.preventDefault();
                               addToCart(b);
                             }
                           }}
                           className={`
-                          flex flex-col rounded-lg border overflow-hidden transition-all min-w-0 cursor-pointer
+                          flex flex-row rounded-lg border overflow-hidden transition-all min-w-0
                           ${
-                            isInCart
-                              ? 'border-[var(--border-focus)] ring-2 ring-[var(--border-focus)] bg-[var(--brand-accent)]/30'
-                              : 'border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--text-muted)]'
+                            !hasStock
+                              ? 'opacity-60 grayscale cursor-not-allowed border-[var(--border)] bg-[var(--bg-surface)]/50'
+                              : isInCart
+                                ? 'cursor-pointer border-[var(--border-focus)] ring-2 ring-[var(--border-focus)] bg-[var(--brand-accent)]/30'
+                                : 'cursor-pointer border-[var(--border)] bg-[var(--bg-surface)] hover:border-[var(--text-muted)]'
                           }
                         `}
-                          aria-label={`Añadir 1 ${b.name} al carrito`}
+                          aria-label={hasStock ? `Añadir 1 ${b.name} al carrito` : `${b.name} sin cantidad`}
+                          aria-disabled={!hasStock}
                         >
-                          <div className="h-44 sm:h-52 lg:h-56 bg-[var(--bg-base)] flex items-center justify-center p-3 relative shrink-0">
+                          <div className="w-24 sm:w-28 lg:w-32 aspect-square bg-[var(--bg-base)] flex items-center justify-center p-3 relative shrink-0">
                             {(() => {
                               const imgUrl = b.imageUrl || getBeverageImageUrl(b.name, b.containerType);
                               return imgUrl ? (
@@ -390,7 +397,7 @@ export default function SalesPage() {
                                 <img src={imgUrl} alt="" className="w-full h-full object-contain rounded" />
                               ) : (
                                 <div
-                                  className="w-full h-full rounded flex items-center justify-center text-2xl font-bold text-[var(--text-muted)] bg-[var(--bg-surface)]"
+                                  className="w-full h-full rounded flex items-center justify-center text-xl font-bold text-[var(--text-muted)] bg-[var(--bg-surface)]"
                                   title={b.name}
                                 >
                                   {b.name.slice(0, 2).toUpperCase()}
@@ -398,23 +405,32 @@ export default function SalesPage() {
                               );
                             })()}
                           </div>
-                          <div className="p-2 flex flex-col gap-0.5">
-                            <p className="font-medium text-[var(--text-primary)] text-xs truncate" title={b.name}>
-                              {b.name}
-                            </p>
-                            <p className="text-[10px] text-[var(--text-muted)] truncate">
-                              {b.containerType && CONTAINER_TYPE_LABELS[b.containerType as ContainerType]
-                                ? CONTAINER_TYPE_LABELS[b.containerType as ContainerType]
-                                : b.containerSize || '—'}
-                            </p>
-                            <p className="font-semibold text-[var(--text-primary)] text-xs">{formatMoney(b.price)}</p>
-                            <div className="flex items-center gap-1 mt-0.5" onClick={(e) => e.stopPropagation()}>
+                          <div className="p-2 flex flex-col justify-between flex-1 min-w-0">
+                            <div>
+                              <p className="font-medium text-[var(--text-primary)] text-xs sm:text-sm truncate" title={b.name}>
+                                {b.name}
+                              </p>
+                              <p className="text-[10px] sm:text-xs text-[var(--text-muted)] truncate">
+                                {b.containerType && CONTAINER_TYPE_LABELS[b.containerType as ContainerType]
+                                  ? CONTAINER_TYPE_LABELS[b.containerType as ContainerType]
+                                  : b.containerSize || '—'}
+                              </p>
+                              <p className="font-semibold text-[var(--text-primary)] text-xs sm:text-sm mt-0.5">
+                                {formatMoney(b.price)}
+                              </p>
+                              {!hasStock && (
+                                <p className="text-[10px] font-medium text-amber-600 dark:text-amber-400 mt-0.5">
+                                  Sin cantidad
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1 mt-1" onClick={(e) => e.stopPropagation()}>
                               <button
                                 type="button"
                                 onClick={() => updateCartQuantity(b.id, -1)}
                                 className="flex items-center justify-center w-7 h-7 rounded border border-red-500/50 bg-red-500/10 text-red-600 hover:bg-red-500/20 focus:outline-none focus:ring-2 focus:ring-red-500/50 disabled:opacity-50 shrink-0 dark:text-red-400 dark:border-red-400/50 dark:bg-red-500/10 dark:hover:bg-red-500/20"
                                 aria-label="Menos"
-                                disabled={qty <= 0}
+                                disabled={qty <= 0 || !hasStock}
                               >
                                 <svg
                                   className="w-4 h-4"
@@ -431,9 +447,10 @@ export default function SalesPage() {
                               </span>
                               <button
                                 type="button"
-                                onClick={() => addToCart(b)}
-                                className="flex items-center justify-center w-7 h-7 rounded border border-red-500/50 bg-red-500/10 text-red-600 hover:bg-red-500/20 focus:outline-none focus:ring-2 focus:ring-red-500/50 shrink-0 dark:text-red-400 dark:border-red-400/50 dark:bg-red-500/10 dark:hover:bg-red-500/20"
+                                onClick={() => hasStock && addToCart(b)}
+                                className="flex items-center justify-center w-7 h-7 rounded border border-red-500/50 bg-red-500/10 text-red-600 hover:bg-red-500/20 focus:outline-none focus:ring-2 focus:ring-red-500/50 disabled:opacity-50 shrink-0 dark:text-red-400 dark:border-red-400/50 dark:bg-red-500/10 dark:hover:bg-red-500/20"
                                 aria-label="Más"
+                                disabled={!hasStock || qty >= (b.stock ?? 0)}
                               >
                                 <svg
                                   className="w-4 h-4"

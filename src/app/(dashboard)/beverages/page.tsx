@@ -1,7 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getBeverages, createBeverage, updateBeverage, deleteBeverage } from '@/lib/api/beverages.api';
+import { createPortal } from 'react-dom';
+import {
+  getBeverages,
+  createBeverage,
+  updateBeverage,
+  deleteBeverage,
+  uploadBeverageImage,
+} from '@/lib/api/beverages.api';
 import type { BeverageDto, CreateBeverageDto, UpdateBeverageDto } from '@/types/beverage.types';
 import { AdminGuard } from '../_components/admin-guard';
 import {
@@ -33,6 +40,10 @@ export default function BeveragesPage() {
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [createImageFile, setCreateImageFile] = useState<File | null>(null);
+  const [createImagePreview, setCreateImagePreview] = useState<string | null>(null);
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
 
   const loadBeverages = () => {
     setLoading(true);
@@ -64,7 +75,7 @@ export default function BeveragesPage() {
     setEditing(b);
   };
 
-  const handleEditSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!editing?.id) return;
     const form = e.currentTarget;
@@ -74,7 +85,6 @@ export default function BeveragesPage() {
     const type = (data.get('type') as string) ?? editing.type;
     const containerType = (data.get('containerType') as ContainerType) ?? editing.containerType;
     const containerSize = (data.get('containerSize') as string)?.trim() ?? '';
-    const imageUrl = (data.get('imageUrl') as string)?.trim() ?? '';
 
     if (!name || price < 1) {
       setError('Nombre y precio son obligatorios.');
@@ -87,18 +97,49 @@ export default function BeveragesPage() {
       type,
       containerType,
       containerSize,
-      imageUrl: imageUrl || undefined,
     };
 
     setSaving(true);
     setError(null);
-    updateBeverage(editing.id, dto)
-      .then(() => {
-        setEditing(null);
-        loadBeverages();
-      })
-      .catch((err) => setError(err?.message ?? 'Error al guardar.'))
-      .finally(() => setSaving(false));
+    try {
+      if (editImageFile) {
+        const { imageUrl } = await uploadBeverageImage(editImageFile);
+        dto.imageUrl = imageUrl;
+      }
+      await updateBeverage(editing.id, dto);
+      setEditing(null);
+      setEditImageFile(null);
+      setEditImagePreview(null);
+      loadBeverages();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al guardar.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEditImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setError('Selecciona una imagen (JPEG, PNG, WebP o GIF).');
+        return;
+      }
+      setEditImageFile(file);
+      const url = URL.createObjectURL(file);
+      setEditImagePreview(url);
+      setError(null);
+    } else {
+      setEditImageFile(null);
+      setEditImagePreview(null);
+    }
+    e.target.value = '';
+  };
+
+  const clearEditImage = () => {
+    setEditImageFile(null);
+    if (editImagePreview) URL.revokeObjectURL(editImagePreview);
+    setEditImagePreview(null);
   };
 
   const handleDelete = (b: BeverageDto) => {
@@ -109,13 +150,23 @@ export default function BeveragesPage() {
     )
       return;
     setDeletingId(b.id);
+    setError(null);
     deleteBeverage(b.id)
       .then(() => loadBeverages())
-      .catch(() => setError('Error al eliminar.'))
+      .catch((err) => {
+        let msg = err?.message ?? 'Error al eliminar.';
+        try {
+          const parsed = typeof msg === 'string' && msg.startsWith('{') ? JSON.parse(msg) : null;
+          if (parsed?.message) msg = parsed.message;
+        } catch {
+          // usar msg tal cual
+        }
+        setError(msg);
+      })
       .finally(() => setDeletingId(null));
   };
 
-  const handleCreateSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleCreateSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     const form = e.currentTarget;
@@ -125,20 +176,51 @@ export default function BeveragesPage() {
       type: (form.querySelector('[name="new-type"]') as HTMLSelectElement)?.value ?? 'ALCOHOLICA',
       containerType: (form.querySelector('[name="new-containerType"]') as HTMLSelectElement)?.value as ContainerType,
       containerSize: (form.querySelector('[name="new-containerSize"]') as HTMLInputElement)?.value?.trim() || '',
-      imageUrl: (form.querySelector('[name="new-imageUrl"]') as HTMLInputElement)?.value?.trim() || undefined,
     };
     if (!dto.name || dto.price < 1 || !dto.containerType) {
       setError('Nombre, precio y envase son obligatorios.');
       return;
     }
     setSaving(true);
-    createBeverage(dto)
-      .then(() => {
-        setShowCreate(false);
-        loadBeverages();
-      })
-      .catch((err) => setError(err?.message ?? 'Error al crear bebida.'))
-      .finally(() => setSaving(false));
+    try {
+      if (createImageFile) {
+        const { imageUrl } = await uploadBeverageImage(createImageFile);
+        dto.imageUrl = imageUrl;
+      }
+      await createBeverage(dto);
+      setShowCreate(false);
+      setCreateImageFile(null);
+      setCreateImagePreview(null);
+      loadBeverages();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al crear bebida.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCreateImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setError('Selecciona una imagen (JPEG, PNG, WebP o GIF).');
+        return;
+      }
+      setCreateImageFile(file);
+      const url = URL.createObjectURL(file);
+      setCreateImagePreview(url);
+      setError(null);
+    } else {
+      setCreateImageFile(null);
+      setCreateImagePreview(null);
+    }
+    e.target.value = '';
+  };
+
+  const clearCreateImage = () => {
+    setCreateImageFile(null);
+    if (createImagePreview) URL.revokeObjectURL(createImagePreview);
+    setCreateImagePreview(null);
   };
 
   return (
@@ -259,14 +341,16 @@ export default function BeveragesPage() {
         </div>
       </div>
 
-      {/* Modal crear */}
-      {showCreate && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--bg-overlay)]"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="create-beverage-title"
-        >
+      {/* Modal crear — Portal para centrar en viewport tras scroll */}
+      {showCreate &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--bg-overlay)] overflow-y-auto"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="create-beverage-title"
+          >
           <div className="glass rounded-xl border border-[var(--border)] w-full max-w-md shadow-lg">
             <div className="px-5 py-4 border-b border-[var(--border)]">
               <h2 id="create-beverage-title" className="text-lg font-semibold text-[var(--text-primary)]">
@@ -341,18 +425,47 @@ export default function BeveragesPage() {
                 <Input id="new-containerSize" name="new-containerSize" placeholder="Ej. 350 ml" className="w-full" />
               </div>
               <div>
-                <label htmlFor="new-imageUrl" className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
-                  Imagen (ruta, opcional)
-                </label>
-                <Input
-                  id="new-imageUrl"
-                  name="new-imageUrl"
-                  placeholder="Ej. /beverages/agua-cristal.png"
-                  className="w-full"
-                />
+                <span className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
+                  Imagen (opcional)
+                </span>
+                <div className="flex items-center gap-3">
+                  <input
+                    id="new-imageFile"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="sr-only"
+                    onChange={handleCreateImageChange}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => document.getElementById('new-imageFile')?.click()}
+                    disabled={saving}
+                  >
+                    {createImageFile ? 'Cambiar imagen' : 'Subir presentación'}
+                  </Button>
+                  {createImagePreview && (
+                    <div className="flex items-center gap-2">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- preview usa blob URL */}
+                      <img
+                        src={createImagePreview}
+                        alt="Vista previa"
+                        className="h-12 w-12 object-cover rounded border border-[var(--border)]"
+                      />
+                      <button
+                        type="button"
+                        onClick={clearCreateImage}
+                        className="text-sm text-red-600 hover:text-red-700 dark:text-red-400"
+                        aria-label="Quitar imagen"
+                      >
+                        Quitar
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <p className="text-xs text-[var(--text-muted)] mt-1">
-                  Sube el archivo en <code className="rounded bg-[var(--bg-surface)] px-1">public/beverages/</code> y
-                  escribe la ruta <code className="rounded bg-[var(--bg-surface)] px-1">/beverages/nombre.png</code>.
+                  JPEG, PNG, WebP o GIF. Máx. 2 MB.
                 </p>
               </div>
               <div className="flex gap-2 pt-2">
@@ -365,6 +478,7 @@ export default function BeveragesPage() {
                   onClick={() => {
                     setShowCreate(false);
                     setError(null);
+                    clearCreateImage();
                   }}
                   disabled={saving}
                 >
@@ -373,17 +487,20 @@ export default function BeveragesPage() {
               </div>
             </form>
           </div>
-        </div>
-      )}
+        </div>,
+          document.body,
+        )}
 
-      {/* Modal editar */}
-      {editing && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--bg-overlay)]"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="edit-beverage-title"
-        >
+      {/* Modal editar — Portal para centrar en viewport tras scroll */}
+      {editing &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--bg-overlay)] overflow-y-auto"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-beverage-title"
+          >
           <div className="glass rounded-xl border border-[var(--border)] w-full max-w-md shadow-lg">
             <div className="px-5 py-4 border-b border-[var(--border)]">
               <h2 id="edit-beverage-title" className="text-lg font-semibold text-[var(--text-primary)]">
@@ -464,23 +581,49 @@ export default function BeveragesPage() {
                 />
               </div>
               <div>
-                <label
-                  htmlFor="edit-imageUrl"
-                  className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5"
-                >
-                  Imagen (ruta)
-                </label>
-                <Input
-                  id="edit-imageUrl"
-                  name="imageUrl"
-                  defaultValue={editing.imageUrl ?? ''}
-                  placeholder="Ej. /beverages/agua-cristal.png"
-                  className="w-full"
-                />
+                <span className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
+                  Imagen
+                </span>
+                <div className="flex items-center gap-3">
+                  <input
+                    id="edit-imageFile"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="sr-only"
+                    onChange={handleEditImageChange}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => document.getElementById('edit-imageFile')?.click()}
+                    disabled={saving}
+                  >
+                    {editImageFile ? 'Cambiar imagen' : 'Subir presentación'}
+                  </Button>
+                  {(editImagePreview || editing.imageUrl) && (
+                    <div className="flex items-center gap-2">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- preview usa blob URL o ruta dinámica */}
+                      <img
+                        src={editImagePreview || editing.imageUrl || ''}
+                        alt="Vista previa"
+                        className="h-12 w-12 object-cover rounded border border-[var(--border)]"
+                      />
+                      {editImageFile && (
+                        <button
+                          type="button"
+                          onClick={clearEditImage}
+                          className="text-sm text-red-600 hover:text-red-700 dark:text-red-400"
+                          aria-label="Quitar imagen nueva"
+                        >
+                          Quitar
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
                 <p className="text-xs text-[var(--text-muted)] mt-1">
-                  Ruta desde la raíz. Sube el archivo en{' '}
-                  <code className="rounded bg-[var(--bg-surface)] px-1">public/beverages/</code> y usa{' '}
-                  <code className="rounded bg-[var(--bg-surface)] px-1">/beverages/nombre.png</code>.
+                  JPEG, PNG, WebP o GIF. Máx. 2 MB. Si no subes una nueva, se mantiene la actual.
                 </p>
               </div>
               <div className="flex gap-2 pt-2">
@@ -493,6 +636,7 @@ export default function BeveragesPage() {
                   onClick={() => {
                     setEditing(null);
                     setError(null);
+                    clearEditImage();
                   }}
                   disabled={saving}
                 >
@@ -501,8 +645,9 @@ export default function BeveragesPage() {
               </div>
             </form>
           </div>
-        </div>
-      )}
+        </div>,
+          document.body,
+        )}
     </AdminGuard>
   );
 }
