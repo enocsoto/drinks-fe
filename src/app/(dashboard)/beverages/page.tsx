@@ -270,7 +270,9 @@ export default function BeveragesPage() {
                     <th className="text-left font-semibold text-[var(--text-secondary)] px-5 py-3">Envase</th>
                     <th className="text-left font-semibold text-[var(--text-secondary)] px-5 py-3">Tipo</th>
                     <th className="text-right font-semibold text-[var(--text-secondary)] px-5 py-3">Precio (COP)</th>
-                    <th className="text-right font-semibold text-[var(--text-secondary)] px-5 py-3 w-32">Acciones</th>
+                    <th className="w-[7.75rem] min-w-[7.75rem] px-3 py-3 text-center text-xs font-semibold text-[var(--text-secondary)]">
+                      Acciones
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -308,28 +310,57 @@ export default function BeveragesPage() {
                       <td className="px-5 py-3 text-right font-medium text-[var(--text-primary)]">
                         {formatMoney(b.price)}
                       </td>
-                      <td className="px-5 py-3 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
+                      <td className="px-2 py-2">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
                             type="button"
-                            variant="outline"
-                            size="sm"
                             onClick={() => handleUpdate(b)}
+                            title="Editar"
                             aria-label={`Editar ${b.name}`}
+                            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)]/50 text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-focus)]"
                           >
-                            Editar
-                          </Button>
-                          <Button
+                            <svg
+                              className="h-5 w-5 shrink-0"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              strokeWidth={2}
+                              aria-hidden
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
+                            </svg>
+                          </button>
+                          <button
                             type="button"
-                            variant="outline"
-                            size="sm"
                             onClick={() => handleDelete(b)}
                             disabled={deletingId === b.id}
+                            title="Eliminar"
                             aria-label={`Eliminar ${b.name}`}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-red-500/35 bg-red-500/10 text-red-600 transition-colors hover:bg-red-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50 disabled:opacity-50 dark:text-red-400"
                           >
-                            {deletingId === b.id ? '...' : 'Eliminar'}
-                          </Button>
+                            {deletingId === b.id ? (
+                              <span className="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                            ) : (
+                              <svg
+                                className="h-5 w-5 shrink-0"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                strokeWidth={2}
+                                aria-hidden
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
+                              </svg>
+                            )}
+                          </button>
                         </div>
                       </td>
                     </tr>

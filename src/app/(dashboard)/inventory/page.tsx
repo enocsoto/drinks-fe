@@ -279,18 +279,37 @@ export default function InventoryPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full table-fixed border-collapse text-sm">
+                <colgroup>
+                  <col className="w-[5%]" />
+                  <col className="w-[19%]" />
+                  <col className="w-[15%]" />
+                  <col className="w-[9%]" />
+                  <col className="w-[7%]" />
+                  <col className="w-[11%]" />
+                  <col className="w-[11%]" />
+                  <col className="w-[7%]" />
+                  <col className="w-[16%]" />
+                </colgroup>
                 <thead>
                   <tr className="bg-[var(--bg-surface)] border-b border-[var(--border)]">
-                    <th className="text-left font-semibold text-[var(--text-secondary)] px-5 py-3 w-14">Imagen</th>
-                    <th className="text-left font-semibold text-[var(--text-secondary)] px-5 py-3">Nombre</th>
-                    <th className="text-left font-semibold text-[var(--text-secondary)] px-5 py-3">Envase</th>
-                    <th className="text-left font-semibold text-[var(--text-secondary)] px-5 py-3">Tipo</th>
-                    <th className="text-right font-semibold text-[var(--text-secondary)] px-5 py-3">Cantidad</th>
-                    <th className="text-right font-semibold text-[var(--text-secondary)] px-5 py-3">Venta (COP)</th>
-                    <th className="text-right font-semibold text-[var(--text-secondary)] px-5 py-3">Costo (COP)</th>
-                    <th className="text-right font-semibold text-[var(--text-secondary)] px-5 py-3">Margen</th>
-                    <th className="text-right font-semibold text-[var(--text-secondary)] px-5 py-3 w-48">Acciones</th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold text-[var(--text-secondary)]">Imagen</th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold text-[var(--text-secondary)]">Nombre</th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold text-[var(--text-secondary)]">Envase</th>
+                    <th className="px-3 py-3 text-left text-xs font-semibold text-[var(--text-secondary)]">Tipo</th>
+                    <th className="px-3 py-3 text-center text-xs font-semibold text-[var(--text-secondary)]">
+                      Cantidad
+                    </th>
+                    <th className="px-3 py-3 text-right text-xs font-semibold text-[var(--text-secondary)]">
+                      Venta (COP)
+                    </th>
+                    <th className="px-3 py-3 text-right text-xs font-semibold text-[var(--text-secondary)]">
+                      Costo (COP)
+                    </th>
+                    <th className="px-3 py-3 text-center text-xs font-semibold text-[var(--text-secondary)]">Margen</th>
+                    <th className="px-3 py-3 text-center text-xs font-semibold text-[var(--text-secondary)]">
+                      Acciones
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -299,7 +318,7 @@ export default function InventoryPage() {
                       key={b.id}
                       className={`border-b border-[var(--border)] last:border-0 hover:bg-[var(--bg-surface)]/50 ${!b.isActive ? 'opacity-60' : ''}`}
                     >
-                      <td className="px-5 py-3">
+                      <td className="px-3 py-2">
                         {(() => {
                           const imgUrl = b.imageUrl || getBeverageImageUrl(b.name, b.containerType);
                           return imgUrl ? (
@@ -316,23 +335,41 @@ export default function InventoryPage() {
                           );
                         })()}
                       </td>
-                      <td className="px-5 py-3 font-medium text-[var(--text-primary)]">{b.name}</td>
-                      <td className="px-5 py-3 text-[var(--text-secondary)]">
-                        {b.containerType && CONTAINER_TYPE_LABELS[b.containerType as ContainerType]
-                          ? CONTAINER_TYPE_LABELS[b.containerType as ContainerType]
-                          : b.containerSize || '—'}
+                      <td className="min-w-0 px-3 py-2 font-medium text-[var(--text-primary)]">
+                        <span className="block truncate" title={b.name}>
+                          {b.name}
+                        </span>
                       </td>
-                      <td className="px-5 py-3 text-[var(--text-secondary)]">
+                      <td className="min-w-0 px-3 py-2 text-[var(--text-secondary)]">
+                        <span
+                          className="block truncate"
+                          title={
+                            b.containerType && CONTAINER_TYPE_LABELS[b.containerType as ContainerType]
+                              ? CONTAINER_TYPE_LABELS[b.containerType as ContainerType]
+                              : b.containerSize || '—'
+                          }
+                        >
+                          {b.containerType && CONTAINER_TYPE_LABELS[b.containerType as ContainerType]
+                            ? CONTAINER_TYPE_LABELS[b.containerType as ContainerType]
+                            : b.containerSize || '—'}
+                        </span>
+                      </td>
+                      <td
+                        className="min-w-0 truncate px-3 py-2 text-[var(--text-secondary)]"
+                        title={String(DRINK_TYPE_LABELS[String(b.type)] ?? b.type)}
+                      >
                         {DRINK_TYPE_LABELS[String(b.type)] ?? b.type}
                       </td>
-                      <td className="px-5 py-3 text-right font-semibold text-[var(--text-primary)]">
+                      <td className="px-3 py-2 text-center font-semibold tabular-nums text-[var(--text-primary)]">
                         {(b.stock ?? 0).toLocaleString('es-CO')}
                       </td>
-                      <td className="px-5 py-3 text-right text-[var(--text-secondary)]">{formatMoney(b.price)}</td>
-                      <td className="px-5 py-3 text-right text-[var(--text-secondary)]">
+                      <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums text-[var(--text-secondary)]">
+                        {formatMoney(b.price)}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums text-[var(--text-secondary)]">
                         {(b.costPrice ?? 0) > 0 ? formatMoney(b.costPrice ?? 0) : '—'}
                       </td>
-                      <td className="px-5 py-3 text-right">
+                      <td className="px-3 py-2 text-center tabular-nums">
                         {(() => {
                           const cost = b.costPrice ?? 0;
                           const price = b.price ?? 0;
@@ -345,37 +382,56 @@ export default function InventoryPage() {
                           );
                         })()}
                       </td>
-                      <td className="px-5 py-3 text-right">
-                        <div className="flex items-center justify-end gap-2 flex-wrap">
-                          <Button
+                      <td className="px-3 py-2">
+                        <div className="flex items-center justify-center gap-0.5">
+                          <button
                             type="button"
-                            variant="outline"
-                            size="sm"
                             onClick={() => setReceivingBeverage(b)}
+                            title="Recibir inventario"
                             aria-label={`Recibir inventario de ${b.name}`}
+                            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)]/50 text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-focus)] disabled:opacity-50"
                           >
-                            Recibir
-                          </Button>
-                          <Button
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                          </button>
+                          <button
                             type="button"
-                            variant="outline"
-                            size="sm"
                             onClick={() => setEditingStock(b)}
+                            title="Ajustar cantidad"
                             aria-label={`Ajustar cantidad de ${b.name}`}
+                            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)]/50 text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-focus)]"
                           >
-                            Ajustar
-                          </Button>
-                          <Button
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
+                            </svg>
+                          </button>
+                          <button
                             type="button"
-                            variant="outline"
-                            size="sm"
                             onClick={() => setBeverageToDelete(b)}
                             disabled={deletingId === b.id}
+                            title="Eliminar"
                             aria-label={`Eliminar ${b.name}`}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-red-500/35 bg-red-500/10 text-red-600 transition-colors hover:bg-red-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50 disabled:opacity-50 dark:text-red-400"
                           >
-                            {deletingId === b.id ? '...' : 'Eliminar'}
-                          </Button>
+                            {deletingId === b.id ? (
+                              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                            ) : (
+                              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
+                              </svg>
+                            )}
+                          </button>
                         </div>
                       </td>
                     </tr>

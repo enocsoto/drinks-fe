@@ -14,6 +14,11 @@ export function todayColombia(): string {
   return dayjs().tz(ZONE_COLOMBIA).format('YYYY-MM-DD');
 }
 
+/** Muestra una fecha YYYY-MM-DD en formato local (Colombia). */
+export function formatDayColombia(yyyyMmDd: string): string {
+  return dayjs.tz(yyyyMmDd, ZONE_COLOMBIA).format('DD/MM/YYYY');
+}
+
 /**
  * Formatea una fecha ISO o Date en hora Colombia (es-CO).
  * Si solo se quiere mostrar la fecha del día, usar saleDate cuando exista.

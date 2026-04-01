@@ -67,7 +67,16 @@ src/
 Los módulos se agregan en `src/app/(dashboard)/[modulo]/` y se van implementando
 uno por uno según solicitud del usuario.
 
-## Skills y reglas (Cursor / AI Agent)
+## Skills y reglas (Cursor / AI)
 
-Ver `.cursor/rules/` y `.cursor/skills/` para convenciones y patrones del proyecto.
-Ver `AGENT.md` para guía de buenas prácticas y `AGENTS.md` para guía de agentes AI.
+- **Reglas:** `.cursor/rules/` (Next.js, convenciones FE, SOLID/DRY).
+- **Skills:** `.cursor/skills/` (frontend-agent, arquitectura, patrones, dominio Colombia).
+- **Guías:** [`.cursor/AGENTS.md`](./.cursor/AGENTS.md) (agentes AI); [`.cursor/AGENT.md`](./.cursor/AGENT.md) (buenas prácticas).
+- **Plantilla de inventario (columnas y reglas):** [`.cursor/docs/INSTRUCCIONES-PLANTILLA-INVENTARIO.md`](./.cursor/docs/INSTRUCCIONES-PLANTILLA-INVENTARIO.md).
+- **Backend (contrato y módulos):** en el repo [drinks-be](../drinks-be), `.cursor/cursorRules/drinks-be-module-docs/SKILL.md` y `drinks-business-rules`.
+
+---
+
+## Mantenimiento de este README
+
+**Actualiza este archivo** cuando cambien comandos, variables de entorno, estructura de carpetas relevante, versión del stack o integración con la API. Así el README sigue siendo la entrada útil para nuevos desarrolladores y para el propio equipo.

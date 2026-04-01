@@ -36,7 +36,7 @@ export function MonthlyRetentionCard({ data, loading }: Props) {
   const topType = breakdown.length > 0 ? [...breakdown].sort((a, b) => (b.count ?? 0) - (a.count ?? 0))[0] : null;
 
   return (
-    <div className="glass p-5 flex flex-col gap-4">
+    <div className="dashboard-card p-6 md:p-7 flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -123,8 +123,8 @@ export function MonthlyRetentionCard({ data, loading }: Props) {
               wrapperStyle={{ fontSize: 11, color: 'var(--text-muted)' }}
               formatter={(value) => (value === 'ventas' ? 'Unidades' : 'Monto COP')}
             />
-            <Bar dataKey="ventas" yAxisId="ventas" fill="#DC2626" radius={[3, 3, 0, 0]} name="ventas" />
-            <Bar dataKey="monto" yAxisId="monto" fill="#1E293B" radius={[3, 3, 0, 0]} name="monto" />
+            <Bar dataKey="ventas" yAxisId="ventas" fill="var(--brand-primary)" radius={[3, 3, 0, 0]} name="ventas" />
+            <Bar dataKey="monto" yAxisId="monto" fill="var(--text-secondary)" radius={[3, 3, 0, 0]} name="monto" />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -132,11 +132,11 @@ export function MonthlyRetentionCard({ data, loading }: Props) {
       {/* Leyenda colores */}
       <div className="flex items-center gap-4 text-xs text-[var(--text-muted)]">
         <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-sm bg-[#DC2626]" />
+          <span className="w-3 h-3 rounded-sm bg-[var(--brand-primary)]" />
           <span>Unidades</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-sm bg-[#1E293B]" />
+          <span className="w-3 h-3 rounded-sm bg-[var(--text-secondary)]" />
           <span>Monto COP</span>
         </div>
       </div>

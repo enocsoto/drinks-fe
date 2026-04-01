@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 
+/* Alinear variantes `dark:*` con el tema de la app (`data-theme` en <html>), no solo con el SO */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
 /* ─── Design Tokens ─── */
 :root {
   /* Brand - Red/White (light mode) */
@@ -195,6 +198,14 @@ select {
   border: 1px solid var(--border);
   box-shadow: var(--shadow-md);
   border-radius: 1rem;
+}
+
+/* Dashboard: tarjetas tipo mockup (bordes 24px, sombra suave) */
+.dashboard-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  border-radius: 1.5rem;
 }
 
 /* ─── Sidebar transition ─── */

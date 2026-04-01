@@ -36,6 +36,9 @@ export interface LoginDto {
   password: string;
 }
 
+/** Respuesta de POST /auth/login: incluye token y datos del usuario (sin password). */
 export interface LoginResponse {
   access_token: string;
+  name?: string;
+  document?: number;
 }

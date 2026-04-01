@@ -175,7 +175,9 @@ export default function UsersPage() {
                     <th className="text-left font-semibold text-[var(--text-secondary)] px-5 py-3">Documento</th>
                     <th className="text-left font-semibold text-[var(--text-secondary)] px-5 py-3">Rol</th>
                     <th className="text-left font-semibold text-[var(--text-secondary)] px-5 py-3">Estado</th>
-                    <th className="text-right font-semibold text-[var(--text-secondary)] px-5 py-3 w-48">Acciones</th>
+                    <th className="w-[7.75rem] min-w-[7.75rem] px-3 py-3 text-center text-xs font-semibold text-[var(--text-secondary)]">
+                      Acciones
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -196,41 +198,96 @@ export default function UsersPage() {
                           {u.isActive ? 'Activo' : 'Desactivado'}
                         </span>
                       </td>
-                      <td className="px-5 py-3 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
+                      <td className="px-2 py-2">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
                             type="button"
-                            variant="outline"
-                            size="sm"
                             onClick={() => {
                               setEditing(u);
                               setError(null);
                             }}
+                            title="Editar"
                             aria-label={`Editar ${u.name}`}
+                            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)]/50 text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-focus)]"
                           >
-                            Editar
-                          </Button>
+                            <svg
+                              className="h-5 w-5 shrink-0"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              strokeWidth={2}
+                              aria-hidden
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
+                            </svg>
+                          </button>
                           {u.isActive ? (
-                            <Button
+                            <button
                               type="button"
-                              variant="outline"
-                              size="sm"
                               onClick={() => handleDeactivate(u)}
                               disabled={deactivatingId === u.id}
-                              className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/30"
+                              title="Desactivar"
+                              aria-label={`Desactivar ${u.name}`}
+                              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-600 transition-colors hover:bg-amber-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 disabled:opacity-50 dark:text-amber-400"
                             >
-                              {deactivatingId === u.id ? '...' : 'Desactivar'}
-                            </Button>
+                              {deactivatingId === u.id ? (
+                                <span className="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                              ) : (
+                                <svg
+                                  className="h-5 w-5 shrink-0"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  aria-hidden
+                                >
+                                  <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="9"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                    fill="none"
+                                  />
+                                  <path
+                                    stroke="currentColor"
+                                    strokeLinecap="round"
+                                    strokeWidth={2}
+                                    d="M9 12h6"
+                                  />
+                                </svg>
+                              )}
+                            </button>
                           ) : (
-                            <Button
+                            <button
                               type="button"
-                              variant="outline"
-                              size="sm"
                               onClick={() => handleReactivate(u)}
                               disabled={deactivatingId === u.id}
+                              title="Reactivar"
+                              aria-label={`Reactivar ${u.name}`}
+                              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-emerald-500/40 bg-emerald-500/10 text-emerald-600 transition-colors hover:bg-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 disabled:opacity-50 dark:text-emerald-400"
                             >
-                              {deactivatingId === u.id ? '...' : 'Reactivar'}
-                            </Button>
+                              {deactivatingId === u.id ? (
+                                <span className="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                              ) : (
+                                <svg
+                                  className="h-5 w-5 shrink-0"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth={2}
+                                  aria-hidden
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                  />
+                                </svg>
+                              )}
+                            </button>
                           )}
                         </div>
                       </td>

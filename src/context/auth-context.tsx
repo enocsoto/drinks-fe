@@ -41,7 +41,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (dto: LoginDto) => {
     const response = await apiLogin(dto);
     const decoded = jwtDecode(response.access_token);
-    setUser(decoded);
+    const nameFromApi = typeof response.name === 'string' && response.name.trim() ? response.name : '';
+    setUser({ ...decoded, name: nameFromApi || decoded.name });
   }, []);
 
   const logout = useCallback(() => {

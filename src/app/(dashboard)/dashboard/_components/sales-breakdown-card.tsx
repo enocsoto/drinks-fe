@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { SalesByBeverageResponse, BeverageBreakdownItem } from '@/types/analytics.types';
 import { SkeletonCard } from './skeleton-card';
@@ -10,20 +10,22 @@ interface Props {
   dataWeek?: SalesByBeverageResponse | null;
   dataDay?: SalesByBeverageResponse | null;
   loading: boolean;
+  periodTab: number;
+  onPeriodTabChange: (index: number) => void;
 }
 
 const PERIOD_TABS = ['Diario', 'Semanal', 'Mensual', 'Anual'] as const;
 
 /** Colores por índice para cada bebida (una raya por color) */
 const BEVERAGE_COLORS = [
-  '#DC2626', // rojo
-  '#1E293B', // slate
-  '#3B82F6', // azul
-  '#F59E0B', // ámbar
-  '#10B981', // esmeralda
-  '#8B5CF6', // violeta
-  '#EC4899', // rosa
-  '#94A3B8', // gris
+  'var(--brand-primary)',
+  'var(--text-secondary)',
+  '#3b82f6',
+  'var(--warning)',
+  'var(--success)',
+  '#8b5cf6',
+  '#ec4899',
+  '#94a3b8',
 ];
 
 function formatCOP(n: number): string {
@@ -53,9 +55,14 @@ function buildMergedChartData(breakdown: BeverageBreakdownItem[]): Record<string
   return labels.map((label) => byLabel.get(label)!);
 }
 
-export function SalesBreakdownCard({ dataMonth, dataWeek, dataDay, loading }: Props) {
-  const [activeTab, setActiveTab] = useState(2); // Mensual
-
+export function SalesBreakdownCard({
+  dataMonth,
+  dataWeek,
+  dataDay,
+  loading,
+  periodTab: activeTab,
+  onPeriodTabChange: setActiveTab,
+}: Props) {
   const isDiario = activeTab === 0;
   const isSemanal = activeTab === 1;
   const data = isDiario ? dataDay : isSemanal ? dataWeek : dataMonth;
@@ -68,12 +75,11 @@ export function SalesBreakdownCard({ dataMonth, dataWeek, dataDay, loading }: Pr
   if (loading) return <SkeletonCard rows={6} />;
 
   return (
-    <div className="glass p-5 flex flex-col gap-5">
+    <div className="dashboard-card p-6 md:p-7 flex flex-col gap-5">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-sm">📊</span>
-          <span className="text-sm font-semibold text-[var(--text-primary)]">Desglose de Ventas por Bebida</span>
+          <span className="text-base font-semibold text-[var(--text-primary)]">Tendencia por bebida</span>
         </div>
         <div className="flex items-center gap-1 bg-[var(--bg-surface)] rounded-lg p-1">
           {PERIOD_TABS.map((tab, i) => (
