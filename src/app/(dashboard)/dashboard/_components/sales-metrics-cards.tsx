@@ -2,7 +2,6 @@
 
 import { useMemo } from 'react';
 import type {
-  TodaySalesResponse,
   SalesByBeverageResponse,
   BeverageBreakdownItem,
   SalesByPeriodResponse,
@@ -10,11 +9,12 @@ import type {
 import { CONTAINER_TYPE_LABELS } from '@/types/beverage.types';
 import type { ContainerType } from '@/types/beverage.types';
 import { monthOverMonthPct } from '../_utils/dashboard-trends';
+import { getColombiaDayLabelSetForWindow } from '@/lib/date-colombia';
+import { getDashboardRecaudacion, getDashboardUnits } from '../_utils/dashboard-beverage-metrics';
 import { SkeletonCard } from './skeleton-card';
 import { cn } from '@/lib/utils';
 
 interface Props {
-  todaySales: TodaySalesResponse | null;
   beverageDay: SalesByBeverageResponse | null;
   beverageMonth: SalesByBeverageResponse | null;
   period: SalesByPeriodResponse | null;
@@ -28,37 +28,6 @@ const PERIOD_LABELS = [
   { title: 'Últimos 30 días', amountTitle: 'Recaudación (30 días)', hint: 'Ventana móvil' },
   { title: 'Acumulado del año', amountTitle: 'Recaudación del año', hint: `Año ${new Date().getFullYear()}` },
 ] as const;
-
-function getYearTotal(data: SalesByBeverageResponse | null): number {
-  return data?.totalTicketSales ?? 0;
-}
-
-function getCustomPeriodTotal(breakdown: BeverageBreakdownItem[], days: number): number {
-  if (!breakdown?.length) return 0;
-  const series = breakdown[0].series ?? [];
-  const lastN = series.slice(-days);
-  const labels = lastN.map((s) => s.label);
-  return breakdown.reduce((sum, b) => {
-    return (
-      sum +
-      (b.series ?? []).reduce((acc, s) => (labels.includes(s.label) ? acc + s.count : acc), 0)
-    );
-  }, 0);
-}
-
-function getCustomPeriodAmount(breakdown: BeverageBreakdownItem[], days: number): number {
-  if (!breakdown?.length) return 0;
-  const series = breakdown[0].series ?? [];
-  const lastN = series.slice(-days);
-  const labelSet = new Set(lastN.map((s) => s.label));
-  let total = 0;
-  for (const b of breakdown) {
-    for (const p of b.series ?? []) {
-      if (labelSet.has(p.label)) total += p.amount ?? 0;
-    }
-  }
-  return Math.round(total);
-}
 
 function formatPresentation(containerType?: string, containerSize?: string): string {
   if (containerType && containerType in CONTAINER_TYPE_LABELS) {
@@ -80,9 +49,7 @@ function getTopBeverageInPeriod(
   days: number,
 ): { name: string; presentation: string; count: number } | null {
   if (!breakdown?.length) return null;
-  const series = breakdown[0].series ?? [];
-  const lastN = series.slice(-days);
-  const labels = new Set(lastN.map((s) => s.label));
+  const labels = getColombiaDayLabelSetForWindow(days);
 
   let top: BeverageBreakdownItem | null = null;
   let topCount = 0;
@@ -178,7 +145,6 @@ function KpiCard({
 }
 
 export function SalesMetricsCards({
-  todaySales,
   beverageDay,
   beverageMonth,
   period,
@@ -203,26 +169,11 @@ export function SalesMetricsCards({
           ? getTopBeverageInPeriod(beverageDay?.breakdown ?? [], 31)
           : getTopBeverage(beverageMonth?.breakdown ?? []);
 
-    const units =
-      isDiario
-        ? (todaySales?.totalSales ?? 0)
-        : isSemanal
-          ? getCustomPeriodTotal(beverageDay?.breakdown ?? [], 7)
-          : isMensual
-            ? getCustomPeriodTotal(beverageDay?.breakdown ?? [], 31)
-            : getYearTotal(beverageMonth);
-
-    const amount =
-      isDiario
-        ? (todaySales?.totalAmount ?? 0)
-        : isSemanal
-          ? getCustomPeriodAmount(beverageDay?.breakdown ?? [], 7)
-          : isMensual
-            ? getCustomPeriodAmount(beverageDay?.breakdown ?? [], 31)
-            : (beverageMonth?.totalAmount ?? 0);
+    const units = getDashboardUnits(periodTab, beverageDay, beverageMonth);
+    const amount = getDashboardRecaudacion(periodTab, beverageDay, beverageMonth);
 
     return { topBev, units, amount };
-  }, [periodTab, todaySales, beverageDay, beverageMonth]);
+  }, [periodTab, beverageDay, beverageMonth]);
 
   if (loading) {
     return (

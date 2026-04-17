@@ -3,6 +3,8 @@
 import { useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { SalesByBeverageResponse, BeverageBreakdownItem } from '@/types/analytics.types';
+import { getLastDaysColombiaLabels } from '@/lib/date-colombia';
+import { getDashboardUnits, getLongestSeriesInBreakdown } from '../_utils/dashboard-beverage-metrics';
 import { SkeletonCard } from './skeleton-card';
 
 interface Props {
@@ -37,10 +39,16 @@ function getBeverageColor(index: number): string {
 }
 
 /** Une las series de todas las bebidas en un solo array por período (name) con un campo por beverageId */
-function buildMergedChartData(breakdown: BeverageBreakdownItem[]): Record<string, string | number>[] {
+function buildMergedChartData(
+  breakdown: BeverageBreakdownItem[],
+  axisMode: 'day' | 'weekOrMonth',
+): Record<string, string | number>[] {
   if (breakdown.length === 0) return [];
 
-  const labels = breakdown[0].series.map((s) => s.label);
+  const labels =
+    axisMode === 'day'
+      ? getLastDaysColombiaLabels(31)
+      : getLongestSeriesInBreakdown(breakdown).map((s) => s.label);
   const byLabel = new Map<string, Record<string, string | number>>();
 
   for (const label of labels) {
@@ -68,9 +76,16 @@ export function SalesBreakdownCard({
   const data = isDiario ? dataDay : isSemanal ? dataWeek : dataMonth;
   const breakdown: BeverageBreakdownItem[] = data?.breakdown ?? [];
 
-  const chartData = useMemo(() => buildMergedChartData(data?.breakdown ?? []), [data]);
+  const chartAxisMode = isDiario ? 'day' : 'weekOrMonth';
+  const chartData = useMemo(
+    () => buildMergedChartData(data?.breakdown ?? [], chartAxisMode),
+    [data, chartAxisMode],
+  );
   const hasChartData = chartData.length > 0;
-  const total = Math.max(0, Number(data?.totalTicketSales ?? 0));
+  const total = useMemo(
+    () => Math.max(0, getDashboardUnits(activeTab, dataDay ?? null, dataMonth ?? null)),
+    [activeTab, dataDay, dataMonth],
+  );
 
   if (loading) return <SkeletonCard rows={6} />;
 

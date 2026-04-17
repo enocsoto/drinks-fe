@@ -13,7 +13,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isLoading) return;
     if (!user || user.role !== ADMIN_ROLE) {
-      router.replace('/dashboard');
+      router.replace(user?.role === 'SELLER' ? '/sales' : '/dashboard');
     }
   }, [user, isLoading, router]);
 

@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { createPortal } from 'react-dom';
 import {
   getPendingPayments,
   createPendingPayment,
@@ -10,27 +9,13 @@ import {
   openPendingPaymentPdf,
 } from '@/lib/api/pending-payments.api';
 import type { PendingPaymentDto, CreatePendingPaymentDto } from '@/types/pending-payment.types';
-import { DrinkType, DRINK_TYPE_LABELS } from '@/types/beverage.types';
 import { formatCOP, formatDate } from '@/lib/utils';
 import { AuthGuard } from '../_components/auth-guard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TableSkeleton } from '../_components/table-skeleton';
-
-const DRINK_TYPE_OPTIONS = Object.values(DrinkType).map((value) => ({
-  value,
-  label: DRINK_TYPE_LABELS[value] ?? value,
-}));
-
-function summaryTags(item: PendingPaymentDto): string[] {
-  const tags: string[] = [];
-  if (item.drinkTypes?.length) {
-    tags.push(...item.drinkTypes.map((t) => DRINK_TYPE_LABELS[t] ?? t));
-  }
-  if (item.hasGloves) tags.push('Guantes');
-  if (item.hasPendingGames) tags.push('Juegos');
-  return tags;
-}
+import { PendingPaymentsModals } from './_components/pending-payments-modals';
+import { summaryTags } from './_utils/pending-payments-display';
 
 export default function PendingPaymentsPage() {
   const [data, setData] = useState<{
@@ -53,6 +38,15 @@ export default function PendingPaymentsPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const limit = 10;
+
+  const hasActiveFilters = search.trim() !== '' || debtDateFrom !== '' || debtDateTo !== '';
+
+  const clearFilters = () => {
+    setSearch('');
+    setDebtDateFrom('');
+    setDebtDateTo('');
+    setPage(1);
+  };
 
   const load = useCallback(() => {
     setLoading(true);
@@ -270,6 +264,16 @@ export default function PendingPaymentsPage() {
           <Button type="button" variant="outline" size="sm" onClick={() => setPage(1)}>
             Filtrar
           </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={clearFilters}
+            disabled={!hasActiveFilters}
+            title={hasActiveFilters ? 'Quitar búsqueda y fechas' : 'No hay filtros aplicados'}
+          >
+            Limpiar
+          </Button>
         </div>
 
         <div className="glass rounded-xl border border-[var(--border)] overflow-hidden">
@@ -314,7 +318,8 @@ export default function PendingPaymentsPage() {
                           {formatCOP(item.amount)}
                           {(item.amountPaid ?? 0) > 0 && (
                             <span className="block text-xs text-[var(--text-muted)]">
-                              Pagado: {formatCOP(item.amountPaid ?? 0)} — Saldo: {formatCOP(Math.max(0, item.amount - (item.amountPaid ?? 0)))}
+                              Pagado: {formatCOP(item.amountPaid ?? 0)} — Saldo:{' '}
+                              {formatCOP(Math.max(0, item.amount - (item.amountPaid ?? 0)))}
                             </span>
                           )}
                         </td>
@@ -463,337 +468,20 @@ export default function PendingPaymentsPage() {
         </div>
       </div>
 
-      {/* Modal crear */}
-      {showCreate && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--bg-overlay)] overflow-y-auto"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="create-pending-title"
-        >
-          <div className="glass rounded-xl border border-[var(--border)] w-full max-w-lg shadow-lg my-8">
-            <div className="px-5 py-4 border-b border-[var(--border)]">
-              <h2 id="create-pending-title" className="text-lg font-semibold text-[var(--text-primary)]">
-                Registrar pago pendiente
-              </h2>
-            </div>
-            <form onSubmit={handleCreateSubmit} className="p-5 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="personName" className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
-                    Nombre *
-                  </label>
-                  <Input id="personName" name="personName" required placeholder="Ej. Juan Pérez" className="w-full" />
-                </div>
-                <div>
-                  <label htmlFor="nickname" className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
-                    Apodo
-                  </label>
-                  <Input id="nickname" name="nickname" placeholder="Ej. Juancho" className="w-full" />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="debtDate" className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
-                    Fecha en que queda debiendo *
-                  </label>
-                  <Input id="debtDate" name="debtDate" type="date" required className="w-full" />
-                </div>
-                <div>
-                  <label htmlFor="amount" className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
-                    Cantidad (COP) *
-                  </label>
-                  <Input
-                    id="amount"
-                    name="amount"
-                    type="number"
-                    min={0}
-                    step={100}
-                    required
-                    placeholder="0"
-                    className="w-full"
-                  />
-                </div>
-              </div>
-              <div>
-                <span className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
-                  Tipos de bebida (opcional, varios)
-                </span>
-                <div className="flex flex-wrap gap-3">
-                  {DRINK_TYPE_OPTIONS.map(({ value, label }) => (
-                    <label key={value} className="flex items-center gap-2 text-sm cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="drinkTypes"
-                        value={value}
-                        className="rounded border-[var(--border)]"
-                      />
-                      {label}
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-4">
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" name="hasGloves" className="rounded border-[var(--border)]" />
-                  Guantes pendientes
-                </label>
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" name="hasPendingGames" className="rounded border-[var(--border)]" />
-                  Juegos pendientes
-                </label>
-              </div>
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
-                  Descripción
-                </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  rows={3}
-                  placeholder="Notas adicionales"
-                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg-base)] px-3 py-2.5 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
-                />
-              </div>
-              <div className="flex gap-2 pt-2">
-                <Button type="submit" disabled={saving}>
-                  {saving ? 'Guardando...' : 'Registrar'}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setShowCreate(false);
-                    setError(null);
-                  }}
-                  disabled={saving}
-                >
-                  Cancelar
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Modal editar — Portal para centrar en viewport tras scroll */}
-      {editing &&
-        typeof document !== 'undefined' &&
-        createPortal(
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--bg-overlay)] overflow-y-auto"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="edit-pending-title"
-          >
-            <div className="glass rounded-xl border border-[var(--border)] w-full max-w-lg shadow-lg my-8">
-            <div className="px-5 py-4 border-b border-[var(--border)]">
-              <h2 id="edit-pending-title" className="text-lg font-semibold text-[var(--text-primary)]">
-                Editar pago pendiente
-              </h2>
-            </div>
-            <form onSubmit={handleEditSubmit} className="p-5 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label
-                    htmlFor="edit-personName"
-                    className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5"
-                  >
-                    Nombre *
-                  </label>
-                  <Input
-                    id="edit-personName"
-                    name="edit-personName"
-                    defaultValue={editing.personName}
-                    required
-                    className="w-full"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="edit-nickname"
-                    className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5"
-                  >
-                    Apodo
-                  </label>
-                  <Input id="edit-nickname" name="edit-nickname" defaultValue={editing.nickname} className="w-full" />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label
-                    htmlFor="edit-debtDate"
-                    className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5"
-                  >
-                    Fecha en que queda debiendo *
-                  </label>
-                  <Input
-                    id="edit-debtDate"
-                    name="edit-debtDate"
-                    type="date"
-                    defaultValue={editing.debtDate}
-                    required
-                    className="w-full"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="edit-amount"
-                    className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5"
-                  >
-                    Cantidad (COP) *
-                  </label>
-                  <Input
-                    id="edit-amount"
-                    name="edit-amount"
-                    type="number"
-                    min={0}
-                    step={100}
-                    defaultValue={editing.amount}
-                    required
-                    className="w-full"
-                  />
-                </div>
-              </div>
-              <div>
-                <span className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
-                  Tipos de bebida (opcional, varios)
-                </span>
-                <div className="flex flex-wrap gap-3">
-                  {DRINK_TYPE_OPTIONS.map(({ value, label }) => (
-                    <label key={value} className="flex items-center gap-2 text-sm cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="edit-drinkTypes"
-                        value={value}
-                        defaultChecked={editing.drinkTypes?.includes(value)}
-                        className="rounded border-[var(--border)]"
-                      />
-                      {label}
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-4">
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="edit-hasGloves"
-                    defaultChecked={editing.hasGloves}
-                    className="rounded border-[var(--border)]"
-                  />
-                  Guantes pendientes
-                </label>
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="edit-hasPendingGames"
-                    defaultChecked={editing.hasPendingGames}
-                    className="rounded border-[var(--border)]"
-                  />
-                  Juegos pendientes
-                </label>
-              </div>
-              <div>
-                <label
-                  htmlFor="edit-description"
-                  className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5"
-                >
-                  Descripción
-                </label>
-                <textarea
-                  id="edit-description"
-                  name="edit-description"
-                  rows={3}
-                  defaultValue={editing.description}
-                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg-base)] px-3 py-2.5 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--border-focus)]"
-                />
-              </div>
-              <div className="flex gap-2 pt-2">
-                <Button type="submit" disabled={saving}>
-                  {saving ? 'Guardando...' : 'Guardar'}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setEditing(null);
-                    setError(null);
-                  }}
-                  disabled={saving}
-                >
-                  Cancelar
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>,
-          document.body,
-        )}
-
-      {/* Modal registrar abono / pago completo — Portal para centrar en viewport tras scroll */}
-      {payingItem &&
-        typeof document !== 'undefined' &&
-        createPortal(
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--bg-overlay)] overflow-y-auto"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="pay-modal-title"
-          >
-            <div className="glass rounded-xl border border-[var(--border)] w-full max-w-sm shadow-lg my-8">
-            <div className="px-5 py-4 border-b border-[var(--border)]">
-              <h2 id="pay-modal-title" className="text-lg font-semibold text-[var(--text-primary)]">
-                Registrar pago — {payingItem.personName}
-              </h2>
-              <p className="text-sm text-[var(--text-muted)] mt-1">
-                Total: {formatCOP(payingItem.amount)} — Pagado: {formatCOP(payingItem.amountPaid ?? 0)} — Saldo: {formatCOP(Math.max(0, payingItem.amount - (payingItem.amountPaid ?? 0)))}
-              </p>
-            </div>
-            <form onSubmit={handlePayAbono} className="p-5 space-y-4">
-              <div>
-                <label htmlFor="abonoAmount" className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
-                  Monto del abono (COP)
-                </label>
-                <Input
-                  id="abonoAmount"
-                  name="abonoAmount"
-                  type="number"
-                  min={0}
-                  step={100}
-                  placeholder="0"
-                  className="w-full"
-                />
-              </div>
-              <div className="flex gap-2 flex-wrap">
-                <Button type="submit" disabled={saving}>
-                  {saving ? 'Guardando...' : 'Registrar abono'}
-                </Button>
-                <Button
-                  type="button"
-                  variant="primary"
-                  onClick={handlePayComplete}
-                  disabled={saving || (payingItem.amountPaid ?? 0) >= payingItem.amount}
-                >
-                  Pagar completo
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setPayingItem(null);
-                    setError(null);
-                  }}
-                  disabled={saving}
-                >
-                  Cancelar
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>,
-          document.body,
-        )}
+      <PendingPaymentsModals
+        showCreate={showCreate}
+        setShowCreate={setShowCreate}
+        editing={editing}
+        setEditing={setEditing}
+        payingItem={payingItem}
+        setPayingItem={setPayingItem}
+        saving={saving}
+        setError={setError}
+        onCreateSubmit={handleCreateSubmit}
+        onEditSubmit={handleEditSubmit}
+        onPayAbono={handlePayAbono}
+        onPayComplete={handlePayComplete}
+      />
     </AuthGuard>
   );
 }

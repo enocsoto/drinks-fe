@@ -35,16 +35,7 @@ export function TransactionsCard({ data, loading, onRefresh }: Props) {
 
   return (
     <div className="dashboard-card flex flex-col gap-5 p-6 md:p-7">
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="text-base font-semibold text-[var(--text-primary)]">Actividad del día</h2>
-        <button
-          type="button"
-          className="text-sm font-medium text-[var(--brand-primary)] transition-opacity hover:opacity-80"
-          onClick={() => (onRefresh ? onRefresh() : window.location.reload())}
-        >
-          más &gt;
-        </button>
-      </div>
+      <h2 className="text-base font-semibold text-[var(--text-primary)]">Actividad del día</h2>
 
       <div className="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--bg-base)]/50">
         <table className="w-full min-w-[280px] text-left text-sm">

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { cn } from '@/lib/utils';
-import { NAV_ITEMS } from './dashboard-nav';
+import { NAV_ITEMS, isNavItemActive } from './dashboard-nav';
 
 const ChevronLeftIcon = () => (
   <svg
@@ -105,7 +105,7 @@ export function Sidebar() {
         </div>
 
         {allowedItems.map((item) => {
-          const isActive = pathname.startsWith(item.href);
+          const isActive = isNavItemActive(pathname, item.href);
 
           return (
             <Link

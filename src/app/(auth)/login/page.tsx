@@ -14,16 +14,15 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loginSuccess, setLoginSuccess] = useState(false);
 
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const router = useRouter();
 
-  // Redirigir al dashboard solo cuando el contexto ya tiene usuario (evita condición de carrera)
   useEffect(() => {
-    if (loginSuccess && isAuthenticated) {
+    if (loginSuccess && isAuthenticated && user) {
       setLoginSuccess(false);
-      router.replace('/dashboard');
+      router.replace(user.role === 'SELLER' ? '/sales' : '/dashboard');
     }
-  }, [loginSuccess, isAuthenticated, router]);
+  }, [loginSuccess, isAuthenticated, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

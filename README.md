@@ -71,8 +71,10 @@ uno por uno según solicitud del usuario.
 
 - **Reglas:** `.cursor/rules/` (Next.js, convenciones FE, SOLID/DRY).
 - **Skills:** `.cursor/skills/` (frontend-agent, arquitectura, patrones, dominio Colombia).
+- **Agentes:** `.cursor/agents/` — [`drinks-fe-frontend.md`](./.cursor/agents/drinks-fe-frontend.md), [`drinks-fe-verifier.md`](./.cursor/agents/drinks-fe-verifier.md).
 - **Guías:** [`.cursor/AGENTS.md`](./.cursor/AGENTS.md) (agentes AI); [`.cursor/AGENT.md`](./.cursor/AGENT.md) (buenas prácticas).
-- **Plantilla de inventario (columnas y reglas):** [`.cursor/docs/INSTRUCCIONES-PLANTILLA-INVENTARIO.md`](./.cursor/docs/INSTRUCCIONES-PLANTILLA-INVENTARIO.md).
+- **Workspace multi-root:** [`drinks.code-workspace`](./drinks.code-workspace) (este repo + `drinks-be` como carpeta hermana).
+- **Plantilla de inventario (columnas y reglas):** [`.cursor/docs/INSTRUCCIONES-PLANTILLA-INVENTARIO.md`](./.cursor/docs/INSTRUCCIONES-PLANTILLA-INVENTARIO.md); copia servida en [`public/templates/`](./public/templates/INSTRUCCIONES-PLANTILLA-INVENTARIO.md).
 - **Backend (contrato y módulos):** en el repo [drinks-be](../drinks-be), `.cursor/cursorRules/drinks-be-module-docs/SKILL.md` y `drinks-business-rules`.
 
 ---

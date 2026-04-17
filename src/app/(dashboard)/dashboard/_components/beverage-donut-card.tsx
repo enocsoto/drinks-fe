@@ -4,11 +4,24 @@ import { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import type { SalesByBeverageResponse, BeverageBreakdownItem } from '@/types/analytics.types';
 import { SkeletonCard } from './skeleton-card';
+import {
+  breakdownForDonut,
+  getDashboardUnits,
+} from '../_utils/dashboard-beverage-metrics';
 
 interface Props {
-  data: SalesByBeverageResponse | null;
+  periodTab: number;
+  beverageDay: SalesByBeverageResponse | null;
+  beverageMonth: SalesByBeverageResponse | null;
   loading: boolean;
 }
+
+const PERIOD_TOTAL_LABELS = [
+  'Unidades · hoy',
+  'Unidades · últimos 7 días',
+  'Unidades · últimos 30 días',
+  'Unidades · año en curso',
+] as const;
 
 const SEGMENT_COLORS = [
   'var(--brand-primary)',
@@ -26,6 +39,7 @@ function buildDonutData(breakdown: BeverageBreakdownItem[]) {
   const otherCount = rest.reduce((s, b) => s + b.count, 0);
   const otherPct = rest.reduce((s, b) => s + b.percentage, 0);
   const rows = top.map((b, i) => ({
+    id: b.beverageId,
     name: b.name,
     value: b.percentage,
     count: b.count,
@@ -33,6 +47,7 @@ function buildDonutData(breakdown: BeverageBreakdownItem[]) {
   }));
   if (otherCount > 0) {
     rows.push({
+      id: '__others__',
       name: 'Otros',
       value: Math.round(otherPct * 10) / 10,
       count: otherCount,
@@ -42,10 +57,23 @@ function buildDonutData(breakdown: BeverageBreakdownItem[]) {
   return rows;
 }
 
-export function BeverageDonutCard({ data, loading }: Props) {
-  const total = data?.totalTicketSales ?? 0;
+export function BeverageDonutCard({ periodTab, beverageDay, beverageMonth, loading }: Props) {
+  const windowBreakdown = useMemo(
+    () => breakdownForDonut(periodTab, beverageDay, beverageMonth),
+    [periodTab, beverageDay, beverageMonth],
+  );
 
-  const chartData = useMemo(() => buildDonutData(data?.breakdown ?? []), [data?.breakdown]);
+  const total = useMemo(
+    () => getDashboardUnits(periodTab, beverageDay, beverageMonth),
+    [periodTab, beverageDay, beverageMonth],
+  );
+
+  const chartData = useMemo(() => buildDonutData(windowBreakdown), [windowBreakdown]);
+
+  const totalLabel =
+    periodTab >= 0 && periodTab < PERIOD_TOTAL_LABELS.length
+      ? PERIOD_TOTAL_LABELS[periodTab]
+      : PERIOD_TOTAL_LABELS[2];
 
   if (loading) {
     return <SkeletonCard rows={4} />;
@@ -53,10 +81,7 @@ export function BeverageDonutCard({ data, loading }: Props) {
 
   return (
     <div className="dashboard-card flex flex-col gap-5 p-6 md:p-7">
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="text-base font-semibold text-[var(--text-primary)]">Desglose por bebida</h2>
-        <span className="text-sm font-medium text-[var(--brand-primary)]">más &gt;</span>
-      </div>
+      <h2 className="text-base font-semibold text-[var(--text-primary)]">Desglose por bebida</h2>
 
       {chartData.length === 0 ? (
         <p className="text-sm text-[var(--text-muted)]">Sin datos del período</p>
@@ -64,7 +89,7 @@ export function BeverageDonutCard({ data, loading }: Props) {
         <>
           <ul className="flex flex-col gap-2.5">
             {chartData.map((row) => (
-              <li key={row.name} className="flex items-center justify-between gap-2 text-sm">
+              <li key={row.id} className="flex items-center justify-between gap-2 text-sm">
                 <span className="flex min-w-0 items-center gap-2">
                   <span
                     className="h-2.5 w-2.5 shrink-0 rounded-full"
@@ -93,8 +118,8 @@ export function BeverageDonutCard({ data, loading }: Props) {
                   dataKey="value"
                   strokeWidth={0}
                 >
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${entry.name}-${index}`} fill={entry.color} />
+                  {chartData.map((entry) => (
+                    <Cell key={entry.id} fill={entry.color} />
                   ))}
                 </Pie>
                 <Tooltip
@@ -122,8 +147,8 @@ export function BeverageDonutCard({ data, loading }: Props) {
             </ResponsiveContainer>
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               <div className="flex h-[42%] w-[42%] flex-col items-center justify-center rounded-full bg-[var(--bg-elevated)] shadow-[var(--shadow-md)]">
-                <span className="text-center text-[10px] font-medium uppercase tracking-wide text-[var(--text-muted)]">
-                  Total uds
+                <span className="max-w-[90%] text-center text-[10px] font-medium uppercase leading-tight tracking-wide text-[var(--text-muted)]">
+                  {totalLabel}
                 </span>
                 <span className="text-lg font-bold tabular-nums text-[var(--text-primary)]">
                   {total.toLocaleString('es-CO')}

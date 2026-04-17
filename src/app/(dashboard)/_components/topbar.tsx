@@ -1,26 +1,45 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { useTheme } from '@/context/theme-context';
 import { Button } from '@/components/ui/button';
-import { NAV_ITEMS } from './dashboard-nav';
+import { NAV_ITEMS, isNavItemActive } from './dashboard-nav';
 import { cn } from '@/lib/utils';
+import { getPendingCorrectionCount } from '@/lib/api/sale-correction-requests.api';
+
+const PENDING_CORRECTIONS_POLL_MS = 60_000;
 
 export function TopBar() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [pendingCorrections, setPendingCorrections] = useState<number | null>(null);
+  const isAdmin = user?.role === 'ADMIN';
 
   const allowedItems = NAV_ITEMS.filter((item) => user && item.roles.includes(user.role));
+
+  const refreshPendingCorrections = useCallback(() => {
+    if (!isAdmin) return;
+    getPendingCorrectionCount()
+      .then((r) => setPendingCorrections(r.count))
+      .catch(() => setPendingCorrections(null));
+  }, [isAdmin]);
 
   useEffect(() => {
     const close = () => setMobileMenuOpen(false);
     queueMicrotask(close);
   }, [pathname]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    refreshPendingCorrections();
+    const id = setInterval(refreshPendingCorrections, PENDING_CORRECTIONS_POLL_MS);
+    return () => clearInterval(id);
+  }, [isAdmin, refreshPendingCorrections]);
 
   return (
     <header className="h-16 border-b border-[var(--border)] bg-[var(--bg-base)] flex items-center justify-between px-4 md:px-6 shrink-0 z-10 relative transition-colors">
@@ -58,7 +77,7 @@ export function TopBar() {
           >
             <nav className="flex flex-col px-2">
               {allowedItems.map((item) => {
-                const isActive = pathname.startsWith(item.href);
+                const isActive = isNavItemActive(pathname, item.href);
                 return (
                   <Link
                     key={item.href}
@@ -83,6 +102,36 @@ export function TopBar() {
       </div>
 
       <div className="flex items-center gap-4">
+        {isAdmin && (
+          <Link
+            href="/sale-corrections"
+            className="relative flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] transition-colors"
+          >
+            <span className="hidden sm:inline">Correcciones</span>
+            <span className="sm:hidden" aria-hidden>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+              </svg>
+            </span>
+            {typeof pendingCorrections === 'number' && pendingCorrections > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-[1.125rem] h-[1.125rem] px-1 flex items-center justify-center rounded-full bg-red-600 text-[10px] font-semibold text-white leading-none">
+                {pendingCorrections > 99 ? '99+' : pendingCorrections}
+              </span>
+            )}
+          </Link>
+        )}
+
         <button
           onClick={toggleTheme}
           className="p-2 rounded-full hover:bg-[var(--bg-surface)] transition-colors text-[var(--text-secondary)]"
