@@ -120,16 +120,16 @@ export default function UsersPage() {
 
   return (
     <AdminGuard>
-      <div className="space-y-6 animate-fadeIn">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
+      <div className="min-w-0 space-y-6 animate-fadeIn">
+        <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Usuarios</h1>
-            <p className="text-[var(--text-muted)] text-sm mt-0.5">
+            <p className="mt-0.5 break-words text-sm text-[var(--text-muted)]">
               Crear, editar y desactivar usuarios. Solo administradores.
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+          <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-2">
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-[var(--text-secondary)]">
               <input
                 type="checkbox"
                 checked={includeInactive}
@@ -140,6 +140,7 @@ export default function UsersPage() {
             </label>
             <Button
               type="button"
+              className="w-full sm:w-auto"
               onClick={() => {
                 setShowCreate(true);
                 setError(null);
@@ -168,7 +169,7 @@ export default function UsersPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="table-zebra w-full text-sm">
                 <thead>
                   <tr className="bg-[var(--bg-surface)] border-b border-[var(--border)]">
                     <th className="text-left font-semibold text-[var(--text-secondary)] px-5 py-3">Nombre</th>

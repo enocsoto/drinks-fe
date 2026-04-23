@@ -9,6 +9,7 @@ import type { BeverageDto } from '@/types/beverage.types';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { optionalSaleDatePayload } from '@/lib/sales/optional-sale-date-payload';
 import { SalesRegisterBeveragePanel } from './sales-register-beverage-panel';
 
 const TABLES = [1, 2, 3, 4, 5, 6] as const;
@@ -28,9 +29,11 @@ function stockAvailable(b: Pick<BeverageDto, 'stock'>): number {
 
 interface Props {
   onRegistered: () => void;
+  /** Administrador: fecha (YYYY-MM-DD) para las ventas nuevas; alineada con el día visto en la lista. */
+  saleDateForNewSales?: string;
 }
 
-export function SalesRegisterForm({ onRegistered }: Props) {
+export function SalesRegisterForm({ onRegistered, saleDateForNewSales }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState<CreateSaleDto>({
@@ -161,6 +164,7 @@ export function SalesRegisterForm({ onRegistered }: Props) {
       return;
     }
     setSubmitting(true);
+    const saleDateOpt = optionalSaleDatePayload(saleDateForNewSales);
     try {
       if (form.lineType === 'BEVERAGE' && cart.size > 0) {
         for (const [, item] of cart) {
@@ -169,6 +173,7 @@ export function SalesRegisterForm({ onRegistered }: Props) {
             lineType: 'BEVERAGE',
             beverageId: item.beverage.id,
             quantity: item.quantity,
+            ...saleDateOpt,
           };
           await createSale(payload);
         }
@@ -182,6 +187,7 @@ export function SalesRegisterForm({ onRegistered }: Props) {
           lineType: form.lineType,
           quantity: form.quantity,
           unitPrice: form.unitPrice ?? 0,
+          ...saleDateOpt,
         };
         if (form.description) payload.description = form.description;
         await createSale(payload);

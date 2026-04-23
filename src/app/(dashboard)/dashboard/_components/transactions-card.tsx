@@ -38,7 +38,7 @@ export function TransactionsCard({ data, loading, onRefresh }: Props) {
       <h2 className="text-base font-semibold text-[var(--text-primary)]">Actividad del día</h2>
 
       <div className="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--bg-base)]/50">
-        <table className="w-full min-w-[280px] text-left text-sm">
+        <table className="table-zebra w-full min-w-[280px] text-left text-sm">
           <thead>
             <tr className="border-b border-[var(--border)] text-[var(--text-muted)]">
               <th className="px-4 py-3 font-medium">Concepto</th>

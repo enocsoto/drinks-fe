@@ -3,6 +3,7 @@
 import { createPortal } from 'react-dom';
 import type { PendingPaymentDto } from '@/types/pending-payment.types';
 import { Button } from '@/components/ui/button';
+import { DateInput } from '@/components/ui/date-input';
 import { Input } from '@/components/ui/input';
 import { formatCOP } from '@/lib/utils';
 import { PENDING_DRINK_TYPE_OPTIONS } from '../_utils/pending-payments-display';
@@ -71,7 +72,7 @@ export function PendingPaymentsModals({
                   <label htmlFor="debtDate" className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
                     Fecha en que queda debiendo *
                   </label>
-                  <Input id="debtDate" name="debtDate" type="date" required className="w-full" />
+                  <DateInput id="debtDate" name="debtDate" defaultValue="" required className="w-full" />
                 </div>
                 <div>
                   <label htmlFor="amount" className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
@@ -200,11 +201,11 @@ export function PendingPaymentsModals({
                     >
                       Fecha en que queda debiendo *
                     </label>
-                    <Input
+                    <DateInput
                       id="edit-debtDate"
                       name="edit-debtDate"
-                      type="date"
-                      defaultValue={editing.debtDate}
+                      value={editing.debtDate}
+                      onValueChange={(v) => setEditing({ ...editing, debtDate: v })}
                       required
                       className="w-full"
                     />

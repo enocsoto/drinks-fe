@@ -221,16 +221,17 @@ export default function BeveragesPage() {
 
   return (
     <AdminGuard>
-      <div className="space-y-6 animate-fadeIn">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
+      <div className="min-w-0 space-y-6 animate-fadeIn">
+        <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Catálogo de bebidas</h1>
-            <p className="text-[var(--text-muted)] text-sm mt-0.5">
+            <p className="mt-0.5 break-words text-sm text-[var(--text-muted)]">
               Solo administradores. Crear, editar y eliminar productos (envase y precio).
             </p>
           </div>
           <Button
             type="button"
+            className="w-full shrink-0 sm:w-auto"
             onClick={() => {
               setShowCreate(true);
               setError(null);
@@ -258,7 +259,7 @@ export default function BeveragesPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="table-zebra w-full text-sm">
                 <thead>
                   <tr className="bg-[var(--bg-surface)] border-b border-[var(--border)]">
                     <th className="text-left font-semibold text-[var(--text-secondary)] px-5 py-3 w-14">Imagen</th>

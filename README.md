@@ -18,8 +18,8 @@ Consume la API de [drinks-be](../drinks-be).
 npm install
 
 # 2. Copiar variables de entorno
-cp .env.template .env.local
-# Editar .env.local con la URL del backend
+cp .env.example .env.local
+# Editar .env.local con la URL del backend (ver `.env.example`)
 
 # 3. Iniciar servidor de desarrollo
 npm run dev
@@ -29,9 +29,10 @@ La app estará disponible en `http://localhost:3000`.
 
 ## Variables de entorno
 
-| Variable              | Descripción                    | Default                     |
-| --------------------- | ------------------------------ | --------------------------- |
+| Variable | Descripción | Default / notas |
+| -------- | ----------- | --------------- |
 | `NEXT_PUBLIC_API_URL` | URL base del backend drinks-be | `http://localhost:3001/api` |
+| `NEXT_PUBLIC_BACKEND_WS_ORIGIN` o `NEXT_PUBLIC_WS_ORIGIN` | Origen para WebSocket (Socket.io); opcional, se deriva de la URL de la API | — |
 
 ## Comandos
 

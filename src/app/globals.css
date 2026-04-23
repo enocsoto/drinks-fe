@@ -30,8 +30,21 @@
   /* Sidebar */
   --sidebar-bg: #1f2937; /* gray-800 */
   --sidebar-text: #f9fafb;
+  --sidebar-border: #334155; /* separador en chrome oscuro; no usar --border (crema) aquí */
   --sidebar-active: var(--brand-primary);
   --sidebar-hover: rgba(220, 38, 38, 0.12);
+  --sidebar-link: #d1d5db;
+  --sidebar-icon: #9ca3af;
+  --sidebar-label: #6b7280;
+  --sidebar-subtle: #9ca3af;
+
+  /* Botón secundario (misma base que --sidebar-bg en app clara) */
+  --btn-secondary-hover: #374151;
+
+  /* Alertas inline (formularios, login) */
+  --alert-error-bg: #fef2f2;
+  --alert-error-border: #fecaca;
+  --alert-error-text: #b91c1c;
 
   /* Status */
   --success: #16a34a;
@@ -66,8 +79,19 @@
 
   --sidebar-bg: #0f172a;
   --sidebar-text: #e2e8f0;
+  --sidebar-border: #334155;
   --sidebar-active: var(--brand-primary);
   --sidebar-hover: rgba(239, 68, 68, 0.15);
+  --sidebar-link: #cbd5e1;
+  --sidebar-icon: #94a3b8;
+  --sidebar-label: #64748b;
+  --sidebar-subtle: #94a3b8;
+
+  --btn-secondary-hover: #1e293b;
+
+  --alert-error-bg: rgba(127, 29, 29, 0.4);
+  --alert-error-border: rgba(248, 113, 113, 0.45);
+  --alert-error-text: #fecaca;
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
@@ -82,7 +106,12 @@
 }
 
 html {
+  color-scheme: light;
   scroll-behavior: smooth;
+}
+
+html[data-theme='dark'] {
+  color-scheme: dark;
 }
 
 body {
@@ -173,6 +202,130 @@ select {
 }
 [data-theme='dark'] select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394A3B8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+}
+
+/* ─── Fecha / hora (inputs nativos) ───
+   Nunca uses `display:flex` en el <input> (en Input.tsx van como `block` vía .input-native-date).
+   color-scheme en el input fuerza cromo claro/oscuro con coherencia al tema. */
+input[type='date'],
+input[type='datetime-local'],
+input[type='time'],
+.input-native-date {
+  color: var(--text-primary);
+  font-family: inherit;
+  line-height: 1.25rem;
+  min-height: 2.5rem;
+  box-sizing: border-box;
+}
+
+html:not([data-theme='dark']) .input-native-date,
+html:not([data-theme='dark']) input[type='date'],
+html:not([data-theme='dark']) input[type='datetime-local'],
+html:not([data-theme='dark']) input[type='time'] {
+  color-scheme: light;
+}
+
+html[data-theme='dark'] .input-native-date,
+html[data-theme='dark'] input[type='date'],
+html[data-theme='dark'] input[type='datetime-local'],
+html[data-theme='dark'] input[type='time'] {
+  color-scheme: dark;
+}
+
+input[type='date']::-webkit-datetime-edit,
+input[type='datetime-local']::-webkit-datetime-edit,
+input[type='time']::-webkit-datetime-edit,
+input[type='date']::-webkit-datetime-edit-fields-wrapper,
+input[type='datetime-local']::-webkit-datetime-edit-fields-wrapper,
+.input-native-date::-webkit-datetime-edit,
+.input-native-date::-webkit-datetime-edit-fields-wrapper {
+  color: var(--text-primary);
+  padding: 0;
+}
+
+input[type='date']::-webkit-date-and-time-value,
+input[type='datetime-local']::-webkit-date-and-time-value {
+  text-align: start;
+  min-height: 1.25em;
+}
+
+input[type='date']::-webkit-calendar-picker-indicator,
+input[type='datetime-local']::-webkit-calendar-picker-indicator,
+input[type='time']::-webkit-calendar-picker-indicator,
+.input-native-date::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  margin-left: 0.25rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  padding: 0.1rem 0.15rem;
+  border-radius: 0.25rem;
+  opacity: 0.75;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+input[type='date']::-webkit-calendar-picker-indicator:hover,
+input[type='datetime-local']::-webkit-calendar-picker-indicator:hover,
+input[type='time']::-webkit-calendar-picker-indicator:hover,
+.input-native-date::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+html:not([data-theme='dark']) input[type='date']::-webkit-calendar-picker-indicator,
+html:not([data-theme='dark']) input[type='datetime-local']::-webkit-calendar-picker-indicator,
+html:not([data-theme='dark']) input[type='time']::-webkit-calendar-picker-indicator,
+html:not([data-theme='dark']) .input-native-date::-webkit-calendar-picker-indicator {
+  opacity: 0.65;
+  filter: none;
+}
+
+html[data-theme='dark'] input[type='date']::-webkit-calendar-picker-indicator,
+html[data-theme='dark'] input[type='datetime-local']::-webkit-calendar-picker-indicator,
+html[data-theme='dark'] input[type='time']::-webkit-calendar-picker-indicator,
+html[data-theme='dark'] .input-native-date::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(1.1);
+  opacity: 0.92;
+}
+
+input[type='date']::-moz-placeholder,
+input[type='datetime-local']::-moz-placeholder,
+.input-native-date::-moz-placeholder {
+  color: var(--text-muted);
+}
+
+/* ─── react-day-picker: marca drinks (sustituye al popup del browser no estilizable) ─── */
+.rdp-root.drinks-rdp,
+.drinks-rdp.rdp-root {
+  --rdp-accent-color: var(--brand-primary);
+  --rdp-accent-background-color: color-mix(in srgb, var(--brand-primary) 18%, var(--bg-elevated));
+  --rdp-today-color: var(--brand-primary);
+  --rdp-day_button-border-radius: 0.5rem;
+  --rdp-day_button-width: 2.25rem;
+  --rdp-day_button-height: 2.25rem;
+  --rdp-outside-opacity: 0.45;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+}
+
+[data-theme='dark'] .drinks-rdp {
+  --rdp-accent-background-color: color-mix(in srgb, var(--brand-primary) 25%, #0f172a);
+}
+
+/* ─── Toasts (Sonner): alineación con radio del sistema ─── */
+[data-sonner-toaster] {
+  --width: 22rem;
+  --border-radius: 0.75rem;
+}
+
+/* ─── Tablas: franjas suaves para escaneo en listados largos ─── */
+.table-zebra tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--bg-surface) 55%, var(--bg-base));
+}
+
+/* ─── Alertas de error reutilizables (login, formularios) ─── */
+.app-alert-error {
+  background: var(--alert-error-bg);
+  border: 1px solid var(--alert-error-border);
+  color: var(--alert-error-text);
 }
 
 /* ─── Recharts tooltips: contraste en dark mode ─── */

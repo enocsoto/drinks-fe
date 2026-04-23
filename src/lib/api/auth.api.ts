@@ -1,6 +1,7 @@
 import { apiFetch } from './api-client';
 import type { LoginDto, LoginResponse } from '@/types/user.types';
 import { TOKEN_KEY } from '@/lib/constants';
+import { getStoredToken, removeStoredToken, setStoredToken } from '@/lib/auth-token-storage';
 
 function setTokenCookie(token: string): void {
   document.cookie = `${TOKEN_KEY}=${token}; path=/; SameSite=Lax`;
@@ -17,7 +18,7 @@ export async function login(dto: LoginDto): Promise<LoginResponse> {
     body: JSON.stringify(payload),
   });
   if (typeof window !== 'undefined') {
-    localStorage.setItem(TOKEN_KEY, response.access_token);
+    setStoredToken(response.access_token);
     setTokenCookie(response.access_token);
   }
   return response;
@@ -25,16 +26,13 @@ export async function login(dto: LoginDto): Promise<LoginResponse> {
 
 export function logout(): void {
   if (typeof window !== 'undefined') {
-    localStorage.removeItem(TOKEN_KEY);
+    removeStoredToken();
     clearTokenCookie();
   }
 }
 
 export function getToken(): string | null {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem(TOKEN_KEY);
-  }
-  return null;
+  return getStoredToken();
 }
 
 export function isAuthenticated(): boolean {

@@ -17,6 +17,11 @@ export async function listSaleCorrectionRequests(): Promise<SaleCorrectionReques
   return apiFetch<SaleCorrectionRequestDto[]>('/sale-correction-requests');
 }
 
+/** Solicitudes del mesero actual (ventas ya solicitadas). */
+export async function listMySaleCorrectionRequests(): Promise<SaleCorrectionRequestDto[]> {
+  return apiFetch<SaleCorrectionRequestDto[]>('/sale-correction-requests/mine');
+}
+
 export async function getPendingCorrectionCount(): Promise<{ count: number }> {
   return apiFetch<{ count: number }>('/sale-correction-requests/pending-count');
 }

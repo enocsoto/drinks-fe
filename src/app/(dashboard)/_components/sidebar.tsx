@@ -47,14 +47,14 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        'hidden md:flex flex-col shrink-0 h-screen z-20 border-r border-[#334155] shadow-xl bg-[var(--sidebar-bg)] text-[var(--sidebar-text)]',
+        'hidden md:flex flex-col shrink-0 h-screen z-20 border-r border-[var(--sidebar-border)] shadow-xl bg-[var(--sidebar-bg)] text-[var(--sidebar-text)]',
         'transition-[width] duration-300 ease-in-out overflow-hidden',
         isCollapsed ? 'w-20' : 'w-64',
       )}
     >
       <div
         className={cn(
-          'h-16 shrink-0 border-b border-[#334155] bg-black/10 min-w-0 flex items-center gap-2',
+          'h-16 shrink-0 border-b border-[var(--sidebar-border)] bg-black/10 min-w-0 flex items-center gap-2',
           isCollapsed ? 'px-2 justify-center' : 'justify-between px-3 lg:px-4',
         )}
       >
@@ -97,7 +97,7 @@ export function Sidebar() {
       <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto overflow-x-hidden">
         <div
           className={cn(
-            'px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap transition-opacity duration-200',
+            'px-3 mb-2 text-xs font-semibold uppercase tracking-wider whitespace-nowrap transition-opacity duration-200 text-[var(--sidebar-label)]',
             isCollapsed ? 'opacity-0 h-0 overflow-hidden p-0 m-0' : 'opacity-100',
           )}
         >
@@ -113,17 +113,17 @@ export function Sidebar() {
               href={item.href}
               title={item.label}
               className={cn(
-                'flex items-center rounded-md text-sm font-medium transition-all group min-h-[2.75rem]',
+                'flex items-center rounded-md text-sm font-medium transition-colors duration-200 group min-h-[2.75rem]',
                 isCollapsed ? 'justify-center gap-0 px-0 py-2.5' : 'gap-3 px-3 py-2.5 lg:justify-start',
                 isActive
                   ? 'bg-[var(--sidebar-active)] text-white shadow-sm'
-                  : 'text-gray-300 hover:bg-[var(--sidebar-hover)] hover:text-white',
+                  : 'text-[var(--sidebar-link)] hover:bg-[var(--sidebar-hover)] hover:text-white',
               )}
             >
               <div
                 className={cn(
-                  'shrink-0 flex items-center justify-center transition-colors',
-                  isActive ? 'text-white' : 'text-gray-400 group-hover:text-[var(--brand-primary-l)]',
+                  'shrink-0 flex items-center justify-center transition-colors duration-200',
+                  isActive ? 'text-white' : 'text-[var(--sidebar-icon)] group-hover:text-[var(--brand-primary-l)]',
                 )}
               >
                 {item.icon}
@@ -143,7 +143,7 @@ export function Sidebar() {
 
       <div
         className={cn(
-          'border-t border-[#334155] bg-black/10 flex items-center min-w-0 shrink-0 transition-[padding] duration-300',
+          'border-t border-[var(--sidebar-border)] bg-black/10 flex items-center min-w-0 shrink-0 transition-[padding] duration-300',
           isCollapsed ? 'justify-center gap-0 py-4 px-2' : 'gap-3 p-4 lg:justify-start',
         )}
       >
@@ -157,7 +157,9 @@ export function Sidebar() {
           )}
         >
           <span className="text-sm font-medium truncate">{user?.name}</span>
-          <span className="text-xs text-gray-400">{user?.role === 'ADMIN' ? 'Administrador' : 'Vendedor'}</span>
+          <span className="text-xs text-[var(--sidebar-subtle)]">
+            {user?.role === 'ADMIN' ? 'Administrador' : 'Vendedor'}
+          </span>
         </div>
       </div>
     </aside>

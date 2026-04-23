@@ -37,11 +37,23 @@ export interface CreateSaleDto {
   unitPrice?: number;
   description?: string;
   sellerId?: number;
+  /** Solo admin en backend: fecha de la venta (YYYY-MM-DD) en Colombia. */
+  saleDate?: string;
 }
 
 export interface SalesListResponse {
   sales: SaleDto[];
   summary: Array<{ sellerId: number; name?: string; totalQuantity: number }>;
+}
+
+/** Cuerpo para PATCH /sales/:id (admin). Ajusta cantidad, bebida o precio según el detalle. */
+export interface UpdateSalePayload {
+  quantity?: number;
+  beverageId?: string;
+  unitPrice?: number;
+  tableNumber?: number;
+  sellerId?: number;
+  changeDescription?: string;
 }
 
 /** Tipos de detalle considerados "bebidas" */

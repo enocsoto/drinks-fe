@@ -9,8 +9,9 @@ import { Button } from '@/components/ui/button';
 import { NAV_ITEMS, isNavItemActive } from './dashboard-nav';
 import { cn } from '@/lib/utils';
 import { getPendingCorrectionCount } from '@/lib/api/sale-correction-requests.api';
+import { subscribeSaleCorrectionsRealtime } from '@/lib/realtime/sale-corrections-socket';
 
-const PENDING_CORRECTIONS_POLL_MS = 60_000;
+const PENDING_CORRECTIONS_POLL_MS = 120_000;
 
 export function TopBar() {
   const { user, logout } = useAuth();
@@ -36,19 +37,33 @@ export function TopBar() {
 
   useEffect(() => {
     if (!isAdmin) return;
-    refreshPendingCorrections();
-    const id = setInterval(refreshPendingCorrections, PENDING_CORRECTIONS_POLL_MS);
-    return () => clearInterval(id);
+    void refreshPendingCorrections();
+    const pollId = setInterval(refreshPendingCorrections, PENDING_CORRECTIONS_POLL_MS);
+    const socket = subscribeSaleCorrectionsRealtime(() => {
+      void refreshPendingCorrections();
+    });
+    return () => {
+      clearInterval(pollId);
+      socket?.disconnect();
+    };
   }, [isAdmin, refreshPendingCorrections]);
 
   return (
-    <header className="h-16 border-b border-[var(--border)] bg-[var(--bg-base)] flex items-center justify-between px-4 md:px-6 shrink-0 z-10 relative transition-colors">
-      <div className="flex items-center gap-4">
+    <header className="relative z-10 flex h-16 min-w-0 shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--bg-base)] px-3 transition-colors sm:px-4 md:px-6">
+      {mobileMenuOpen ? (
+        <button
+          type="button"
+          className="fixed inset-0 z-40 cursor-default border-0 bg-[var(--bg-overlay)] md:hidden"
+          aria-label="Cerrar menú"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      ) : null}
+      <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
         {/* Hamburger solo en móvil: despliega menú hacia abajo */}
         <button
           type="button"
           onClick={() => setMobileMenuOpen((o) => !o)}
-          className="md:hidden p-2 rounded-lg hover:bg-[var(--bg-surface)] transition-colors text-[var(--text-secondary)]"
+          className="md:hidden p-2 rounded-lg hover:bg-[var(--bg-surface)] transition-colors text-[var(--text-secondary)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-base)]"
           aria-label={mobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
           aria-expanded={mobileMenuOpen}
         >
@@ -72,7 +87,7 @@ export function TopBar() {
         {/* Menú desplegable móvil: hacia abajo */}
         {mobileMenuOpen && (
           <div
-            className="absolute left-0 right-0 top-16 z-50 bg-[var(--bg-base)] border-b border-[var(--border)] shadow-lg py-2 animate-fadeIn"
+            className="absolute left-0 right-0 top-16 z-50 max-h-[min(100dvh-4rem,24rem)] overflow-y-auto border-b border-[var(--border)] bg-[var(--bg-base)] py-2 shadow-lg animate-fadeIn"
             role="menu"
           >
             <nav className="flex flex-col px-2">
@@ -101,7 +116,7 @@ export function TopBar() {
         )}
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3 md:gap-4">
         {isAdmin && (
           <Link
             href="/sale-corrections"

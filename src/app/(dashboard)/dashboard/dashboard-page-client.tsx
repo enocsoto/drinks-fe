@@ -80,7 +80,7 @@ export function DashboardPageClient() {
   }, [loadData]);
 
   return (
-    <div className="mx-auto max-w-[1400px] space-y-6 animate-fadeIn">
+    <div className="mx-auto min-w-0 max-w-[1400px] space-y-6 animate-fadeIn">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)] md:text-3xl">

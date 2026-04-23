@@ -1,4 +1,5 @@
-import { API_URL, TOKEN_KEY } from '@/lib/constants';
+import { API_URL } from '@/lib/constants';
+import { getStoredToken } from '@/lib/auth-token-storage';
 import { apiFetch } from './api-client';
 import type { DailyClosingData } from '@/types/reports.types';
 
@@ -16,7 +17,7 @@ export async function getDailyClosingData(date?: string): Promise<DailyClosingDa
  * provoca la descarga del archivo (blob).
  */
 export async function downloadDailyClosingPdf(date?: string): Promise<void> {
-  const token = typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null;
+  const token = getStoredToken();
   const params = date ? `?date=${encodeURIComponent(date)}` : '';
   const base = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
   const url = `${base}/reports/daily-closing${params}`;

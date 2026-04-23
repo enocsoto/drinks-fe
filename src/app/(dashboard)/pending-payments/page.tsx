@@ -13,6 +13,7 @@ import { formatCOP, formatDate } from '@/lib/utils';
 import { AuthGuard } from '../_components/auth-guard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DateInput } from '@/components/ui/date-input';
 import { TableSkeleton } from '../_components/table-skeleton';
 import { PendingPaymentsModals } from './_components/pending-payments-modals';
 import { summaryTags } from './_utils/pending-payments-display';
@@ -211,17 +212,18 @@ export default function PendingPaymentsPage() {
 
   return (
     <AuthGuard>
-      <div className="space-y-6 animate-fadeIn">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
+      <div className="min-w-0 space-y-6 animate-fadeIn">
+        <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Pagos pendientes</h1>
-            <p className="text-[var(--text-muted)] text-sm mt-0.5">
+            <p className="mt-0.5 break-words text-sm text-[var(--text-muted)]">
               Personas con saldos por cobrar: nombre, apodo, fecha, cantidad, tipos (bebidas, guantes, juegos) y
               descripción.
             </p>
           </div>
           <Button
             type="button"
+            className="w-full shrink-0 sm:w-auto"
             onClick={() => {
               setShowCreate(true);
               setError(null);
@@ -237,43 +239,53 @@ export default function PendingPaymentsPage() {
           </p>
         )}
 
-        <div className="flex flex-wrap gap-3 items-end">
-          <div className="min-w-[180px]">
-            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Buscar</label>
+        <div className="min-w-0 space-y-3">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-[var(--text-muted)]">Buscar</label>
             <Input
               type="search"
               placeholder="Nombre, apodo o descripción"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full"
+              className="w-full min-w-0"
             />
           </div>
-          <div>
-            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Fecha desde</label>
-            <Input
-              type="date"
-              value={debtDateFrom}
-              onChange={(e) => setDebtDateFrom(e.target.value)}
-              className="w-full"
-            />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="min-w-0">
+              <label className="mb-1 block text-xs font-medium text-[var(--text-muted)]">Fecha desde</label>
+              <DateInput
+                value={debtDateFrom}
+                onValueChange={setDebtDateFrom}
+                emptyLabel="Cualquiera"
+                className="w-full min-w-0"
+              />
+            </div>
+            <div className="min-w-0">
+              <label className="mb-1 block text-xs font-medium text-[var(--text-muted)]">Fecha hasta</label>
+              <DateInput
+                value={debtDateTo}
+                onValueChange={setDebtDateTo}
+                emptyLabel="Cualquiera"
+                className="w-full min-w-0"
+              />
+            </div>
           </div>
-          <div>
-            <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Fecha hasta</label>
-            <Input type="date" value={debtDateTo} onChange={(e) => setDebtDateTo(e.target.value)} className="w-full" />
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+            <Button type="button" variant="outline" size="sm" className="min-h-10 w-full sm:w-auto" onClick={() => setPage(1)}>
+              Filtrar
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="min-h-10 w-full sm:w-auto"
+              onClick={clearFilters}
+              disabled={!hasActiveFilters}
+              title={hasActiveFilters ? 'Quitar búsqueda y fechas' : 'No hay filtros aplicados'}
+            >
+              Limpiar
+            </Button>
           </div>
-          <Button type="button" variant="outline" size="sm" onClick={() => setPage(1)}>
-            Filtrar
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={clearFilters}
-            disabled={!hasActiveFilters}
-            title={hasActiveFilters ? 'Quitar búsqueda y fechas' : 'No hay filtros aplicados'}
-          >
-            Limpiar
-          </Button>
         </div>
 
         <div className="glass rounded-xl border border-[var(--border)] overflow-hidden">
@@ -289,7 +301,7 @@ export default function PendingPaymentsPage() {
           ) : (
             <>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="table-zebra w-full text-sm">
                   <thead>
                     <tr className="bg-[var(--bg-surface)] border-b border-[var(--border)]">
                       <th className="text-left font-semibold text-[var(--text-secondary)] px-5 py-3">Nombre</th>

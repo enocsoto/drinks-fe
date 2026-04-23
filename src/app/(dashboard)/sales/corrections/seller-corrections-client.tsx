@@ -1,12 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/auth-context';
 import { getSales } from '@/lib/api/sales.api';
-import { createSaleCorrectionRequest } from '@/lib/api/sale-correction-requests.api';
+import { createSaleCorrectionRequest, listMySaleCorrectionRequests } from '@/lib/api/sale-correction-requests.api';
 import { ApiError } from '@/lib/api/api-client';
+import type { SaleCorrectionRequestDto, SaleCorrectionRequestStatus } from '@/types/sale-correction-request.types';
 import { Button } from '@/components/ui/button';
 import type { SaleDto, SaleDetailDto } from '@/types/sale.types';
 import {
@@ -22,6 +23,18 @@ import {
   formatDateTimeColombia,
   isSaleOnColombiaCalendarDay,
 } from '@/lib/date-colombia';
+import { subscribeSaleCorrectionsRealtime } from '@/lib/realtime/sale-corrections-socket';
+
+/** Alinea sale.id (venta) con request.saleId (API / ObjectId). */
+function canonicalSaleId(value: unknown): string {
+  if (value == null || value === '') return '';
+  if (typeof value === 'string') return value.trim();
+  if (typeof value === 'object' && value !== null && '$oid' in value) {
+    const oid = (value as { $oid?: unknown }).$oid;
+    if (typeof oid === 'string') return oid.trim();
+  }
+  return String(value).trim();
+}
 
 function formatMoney(value: number): string {
   return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(value);
@@ -35,10 +48,55 @@ function formatTableLabel(tableNumber: number | undefined | null): string {
 
 const TABLE_COLS = 6;
 
+function correctionStatusLabel(status: SaleCorrectionRequestStatus): { text: string; className: string } {
+  switch (status) {
+    case 'PENDING':
+      return {
+        text: 'Solicitud pendiente',
+        className: 'text-amber-800 dark:text-amber-200',
+      };
+    case 'RESOLVED':
+      return { text: 'Atendida', className: 'text-emerald-700 dark:text-emerald-300' };
+    case 'REJECTED':
+      return { text: 'Rechazada', className: 'text-red-700 dark:text-red-300' };
+    default:
+      return { text: status, className: 'text-[var(--text-muted)]' };
+  }
+}
+
+function CorrectionActionCell({
+  saleId,
+  requestBySaleId,
+  onSolicitar,
+}: {
+  saleId: string;
+  requestBySaleId: Map<string, SaleCorrectionRequestDto>;
+  onSolicitar: () => void;
+}) {
+  const existing = requestBySaleId.get(canonicalSaleId(saleId));
+  if (existing) {
+    const { text, className } = correctionStatusLabel(existing.status);
+    return (
+      <span
+        className={`inline-block text-sm font-medium tabular-nums ${className}`}
+        title={existing.status === 'PENDING' ? 'Ya enviaste una solicitud para esta venta.' : undefined}
+      >
+        {text}
+      </span>
+    );
+  }
+  return (
+    <Button type="button" variant="outline" size="sm" className="whitespace-nowrap" onClick={onSolicitar}>
+      Solicitar
+    </Button>
+  );
+}
+
 export function SellerCorrectionsPageClient() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
   const [sales, setSales] = useState<SaleDto[]>([]);
+  const [myCorrectionRequests, setMyCorrectionRequests] = useState<SaleCorrectionRequestDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [correctionSaleId, setCorrectionSaleId] = useState<string | null>(null);
   const [correctionReason, setCorrectionReason] = useState('');
@@ -46,18 +104,38 @@ export function SellerCorrectionsPageClient() {
 
   const today = todayColombia();
 
-  const loadTodaySales = useCallback(async () => {
-    setLoading(true);
+  const loadTodaySales = useCallback(async (options?: { silent?: boolean }) => {
+    const silent = options?.silent === true;
+    if (!silent) setLoading(true);
     try {
-      const res = await getSales(today);
+      const [res, mine] = await Promise.all([
+        getSales(today),
+        listMySaleCorrectionRequests().catch(() => [] as SaleCorrectionRequestDto[]),
+      ]);
+      setMyCorrectionRequests(mine);
       const list = res.sales ?? [];
       setSales(list.filter((s) => isSaleOnColombiaCalendarDay(s.DateSale, today)));
     } catch {
-      setSales([]);
+      if (!silent) setSales([]);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [today]);
+
+  /** Última solicitud por venta (más reciente si hubiera varias). */
+  const requestBySaleId = useMemo(() => {
+    const map = new Map<string, SaleCorrectionRequestDto>();
+    const sorted = [...myCorrectionRequests].sort(
+      (a, b) =>
+        new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime(),
+    );
+    for (const r of sorted) {
+      const sid = canonicalSaleId(r.saleId);
+      if (!sid) continue;
+      if (!map.has(sid)) map.set(sid, r);
+    }
+    return map;
+  }, [myCorrectionRequests]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -73,7 +151,17 @@ export function SellerCorrectionsPageClient() {
 
   useEffect(() => {
     if (authLoading || !user || user.role !== 'SELLER') return;
-    loadTodaySales();
+    void loadTodaySales();
+  }, [authLoading, user, loadTodaySales]);
+
+  useEffect(() => {
+    if (authLoading || !user || user.role !== 'SELLER') return;
+    const socket = subscribeSaleCorrectionsRealtime(() => {
+      void loadTodaySales({ silent: true });
+    });
+    return () => {
+      socket?.disconnect();
+    };
   }, [authLoading, user, loadTodaySales]);
 
   const beverageSales = sales.filter(saleHasBeverageDetails);
@@ -94,10 +182,11 @@ export function SellerCorrectionsPageClient() {
     if (!correctionSaleId) return;
     setCorrectionSubmitting(true);
     try {
-      await createSaleCorrectionRequest({
+      const created = await createSaleCorrectionRequest({
         saleId: correctionSaleId,
         reason: correctionReason.trim() || undefined,
       });
+      setMyCorrectionRequests((prev) => [created, ...prev]);
       toast.success('Solicitud enviada al administrador.');
       setCorrectionSaleId(null);
       setCorrectionReason('');
@@ -118,15 +207,13 @@ export function SellerCorrectionsPageClient() {
   }
 
   return (
-    <div className="space-y-6 animate-fadeIn">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Solicitar corrección</h1>
-          <p className="mt-0.5 text-sm text-[var(--text-muted)]">
-            Solo puedes solicitar corrección sobre ventas registradas <strong>hoy</strong> (zona Colombia). Fecha:{' '}
-            <span className="font-medium text-[var(--text-primary)]">{formatDayColombia(today)}</span>.
-          </p>
-        </div>
+    <div className="min-w-0 space-y-6 animate-fadeIn">
+      <div className="min-w-0">
+        <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Solicitar corrección</h1>
+        <p className="mt-0.5 break-words text-sm text-[var(--text-muted)]">
+          Solo puedes solicitar corrección sobre ventas registradas <strong>hoy</strong> (zona Colombia). Fecha:{' '}
+          <span className="font-medium text-[var(--text-primary)]">{formatDayColombia(today)}</span>.
+        </p>
       </div>
 
       <section className="glass overflow-hidden rounded-xl border border-[var(--border)]">
@@ -141,7 +228,7 @@ export function SellerCorrectionsPageClient() {
               No hay ventas de bebidas para hoy.
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <table className="table-zebra w-full text-sm">
               <thead>
                 <tr className="border-b border-[var(--border)] bg-[var(--bg-surface)]">
                   <th className="px-5 py-3 text-left font-semibold text-[var(--text-primary)]">Fecha y hora</th>
@@ -178,18 +265,14 @@ export function SellerCorrectionsPageClient() {
                         {formatMoney(Number(sale.totalPrice))}
                       </td>
                       <td className="px-5 py-3 text-right">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="whitespace-nowrap"
-                          onClick={() => {
+                        <CorrectionActionCell
+                          saleId={canonicalSaleId(sale.id)}
+                          requestBySaleId={requestBySaleId}
+                          onSolicitar={() => {
                             setCorrectionSaleId(sale.id);
                             setCorrectionReason('');
                           }}
-                        >
-                          Solicitar
-                        </Button>
+                        />
                       </td>
                     </tr>
                   );
@@ -212,7 +295,7 @@ export function SellerCorrectionsPageClient() {
               No hay ventas del billar para hoy.
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <table className="table-zebra w-full text-sm">
               <thead>
                 <tr className="border-b border-[var(--border)] bg-[var(--bg-surface)]">
                   <th className="px-5 py-3 text-left font-semibold text-[var(--text-primary)]">Fecha y hora</th>
@@ -249,18 +332,14 @@ export function SellerCorrectionsPageClient() {
                         {formatMoney(Number(sale.totalPrice))}
                       </td>
                       <td className="px-5 py-3 text-right">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="whitespace-nowrap"
-                          onClick={() => {
+                        <CorrectionActionCell
+                          saleId={canonicalSaleId(sale.id)}
+                          requestBySaleId={requestBySaleId}
+                          onSolicitar={() => {
                             setCorrectionSaleId(sale.id);
                             setCorrectionReason('');
                           }}
-                        >
-                          Solicitar
-                        </Button>
+                        />
                       </td>
                     </tr>
                   );

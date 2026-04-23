@@ -52,28 +52,33 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex h-screen w-full items-center justify-center bg-[var(--bg-surface)] p-4">
-      <div className="w-full max-w-md animate-fadeIn">
-        <div className="glass p-8 flex flex-col gap-6">
+    <div className="flex min-h-[100dvh] w-full items-center justify-center bg-[var(--bg-surface)] p-3 sm:p-4">
+      <div className="w-full min-w-0 max-w-md animate-fadeIn">
+        <div className="glass flex flex-col gap-5 p-5 sm:gap-6 sm:p-8">
           <div className="flex items-center justify-center gap-3 mb-2">
             <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-primary-h)] flex items-center justify-center font-bold text-white shadow-lg text-xl">
               DB
             </div>
           </div>
 
-          <div className="text-center space-y-1">
+          <div className="text-center space-y-1.5">
             <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">los Amigos</h1>
-            <p className="text-sm text-[var(--text-muted)]">Ingresa tus credenciales para acceder al sistema</p>
+            <p className="text-sm leading-relaxed text-[var(--text-muted)]">
+              Ingresa tus credenciales para acceder al sistema
+            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="p-3 text-sm rounded bg-red-50 text-red-600 border border-red-200 shadow-sm animate-slideIn">
+              <div
+                className="app-alert-error p-3 text-sm rounded-lg shadow-sm animate-slideIn"
+                role="alert"
+              >
                 {error}
               </div>
             )}
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
                 <label className="text-sm font-medium text-[var(--text-primary)] block mb-1.5" htmlFor="document">
                   Documento de Identidad

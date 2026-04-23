@@ -1,4 +1,5 @@
 import { API_URL, TOKEN_KEY } from '@/lib/constants';
+import { getStoredToken, removeStoredToken } from '@/lib/auth-token-storage';
 
 export class ApiError extends Error {
   constructor(
@@ -14,7 +15,7 @@ export class ApiError extends Error {
 function clearSession(): void {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.removeItem(TOKEN_KEY);
+    removeStoredToken();
     document.cookie = `${TOKEN_KEY}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
   } catch {
     // ignore
@@ -22,7 +23,7 @@ function clearSession(): void {
 }
 
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const token = typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null;
+  const token = getStoredToken();
   const base = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
   const p = path.startsWith('/') ? path.slice(1) : path;
   const url = `${base}/${p}`;

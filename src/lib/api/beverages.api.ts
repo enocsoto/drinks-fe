@@ -1,5 +1,6 @@
 import { apiFetch } from './api-client';
-import { API_URL, TOKEN_KEY } from '@/lib/constants';
+import { API_URL } from '@/lib/constants';
+import { getStoredToken } from '@/lib/auth-token-storage';
 import type {
   BeveragesPaginatedResponse,
   BeverageDto,
@@ -92,7 +93,7 @@ export interface ImportResult {
 /** Descarga la plantilla Excel para cargar bebidas */
 export async function downloadImportTemplate(): Promise<void> {
   const base = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
-  const token = typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null;
+  const token = getStoredToken();
   const res = await fetch(`${base}/beverage/import/template`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
@@ -112,7 +113,7 @@ export async function downloadImportTemplate(): Promise<void> {
 /** Carga bebidas desde archivo Excel */
 export async function importBeveragesFromFile(file: File): Promise<ImportResult> {
   const base = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
-  const token = typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null;
+  const token = getStoredToken();
   const formData = new FormData();
   formData.append('file', file);
 

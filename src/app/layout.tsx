@@ -1,6 +1,6 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
-import { Toaster } from 'sonner';
+import { AppToaster } from '@/components/app-toaster';
 import './globals.css';
 import { ThemeProvider } from '@/context/theme-context';
 import { AuthProvider } from '@/context/auth-context';
@@ -20,6 +20,12 @@ export const metadata: Metadata = {
   description: 'Sistema administrativo para billar y venta de bebidas',
 };
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -31,7 +37,7 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             {children}
-            <Toaster richColors position="top-center" />
+            <AppToaster />
           </AuthProvider>
         </ThemeProvider>
       </body>

@@ -12,11 +12,12 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-focus)] disabled:pointer-events-none disabled:opacity-50',
+          'inline-flex items-center justify-center rounded-md font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-base)] disabled:pointer-events-none disabled:opacity-50',
           {
             'bg-[var(--brand-primary)] text-[var(--text-on-brand)] hover:bg-[var(--brand-primary-h)] shadow-sm':
               variant === 'primary',
-            'bg-[var(--sidebar-bg)] text-[var(--text-on-brand)] hover:bg-opacity-90': variant === 'secondary',
+            'bg-[var(--sidebar-bg)] text-[var(--text-on-brand)] hover:bg-[var(--btn-secondary-hover)]':
+              variant === 'secondary',
             'border border-[var(--border)] bg-transparent hover:bg-[var(--bg-surface)] text-[var(--text-primary)]':
               variant === 'outline',
             'bg-transparent hover:bg-[var(--bg-surface)] text-[var(--text-primary)]': variant === 'ghost',

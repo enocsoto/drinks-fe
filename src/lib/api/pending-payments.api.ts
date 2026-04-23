@@ -1,4 +1,5 @@
-import { API_URL, TOKEN_KEY } from '@/lib/constants';
+import { API_URL } from '@/lib/constants';
+import { getStoredToken } from '@/lib/auth-token-storage';
 import { apiFetch } from './api-client';
 import type {
   PendingPaymentDto,
@@ -67,7 +68,7 @@ export async function deletePendingPayment(id: string): Promise<void> {
 
 /** Descarga el PDF comanda para imprimir (reimprimible). */
 export async function openPendingPaymentPdf(id: string): Promise<void> {
-  const token = typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null;
+  const token = getStoredToken();
   const base = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
   const url = `${base}/pending-payments/${encodeURIComponent(id)}/pdf`;
 

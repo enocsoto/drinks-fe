@@ -12,6 +12,9 @@ import {
 } from '@/types/sale.types';
 import { TableSkeleton } from '../_components/table-skeleton';
 import { todayColombia, formatDayColombia, formatDateTimeColombia } from '@/lib/date-colombia';
+import { getSalesListDayYyyyMmDd } from '@/lib/sales/sales-list-day';
+import { isUserAdmin } from '@/lib/utils/user-role';
+import { DateInput } from '@/components/ui/date-input';
 import { SalesRegisterForm } from './_components/sales-register-form';
 
 function formatMoney(value: number): string {
@@ -26,14 +29,18 @@ function formatTableLabel(tableNumber: number | undefined | null): string {
 
 export function SalesPageClient() {
   const { user } = useAuth();
+  const isAdmin = isUserAdmin(user);
+  const [adminListDate, setAdminListDate] = useState(() => todayColombia());
   const [sales, setSales] = useState<SaleDto[]>([]);
   const [summary, setSummary] = useState<Array<{ sellerId: number; name?: string; totalQuantity: number }>>([]);
   const [loading, setLoading] = useState(true);
 
+  const listDayYyyyMmDd = getSalesListDayYyyyMmDd(isAdmin, adminListDate);
+
   const loadSales = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await getSales(todayColombia());
+      const res = await getSales(listDayYyyyMmDd);
       setSales(res.sales ?? []);
       setSummary(res.summary ?? []);
     } catch {
@@ -42,7 +49,7 @@ export function SalesPageClient() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [listDayYyyyMmDd]);
 
   useEffect(() => {
     loadSales();
@@ -64,27 +71,40 @@ export function SalesPageClient() {
   const tableCols = 5;
 
   return (
-    <div className="space-y-6 animate-fadeIn">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Ventas</h1>
-          <p className="mt-0.5 text-sm text-[var(--text-primary)]">
+    <div className="min-w-0 space-y-6 animate-fadeIn">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between md:items-center">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl font-bold tracking-tight text-[var(--text-primary)] sm:text-2xl">Ventas</h1>
+          <p className="mt-0.5 break-words text-sm text-[var(--text-primary)]">
             Bebidas por mesa y ventas del billar (guantes, juegos). Sesión:{' '}
             <span className="font-medium text-[var(--text-primary)]">{user?.name}</span>
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="whitespace-nowrap text-sm font-medium text-[var(--text-primary)]">Fecha</span>
-          <span
-            className="rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2 text-sm font-medium tabular-nums text-[var(--text-primary)]"
-            aria-label={`Ventas del día ${formatDayColombia(todayColombia())}`}
-          >
-            {formatDayColombia(todayColombia())}
-          </span>
+        <div className="flex w-full min-w-0 shrink-0 items-center gap-2 sm:w-auto sm:justify-end">
+          <span className="shrink-0 whitespace-nowrap text-sm font-medium text-[var(--text-primary)]">Fecha</span>
+          {isAdmin ? (
+            <DateInput
+              value={adminListDate}
+              onValueChange={setAdminListDate}
+              required
+              className="min-w-0 w-full sm:w-[10.5rem] border-[var(--border)] bg-[var(--bg-surface)]"
+              aria-label="Día a consultar en ventas"
+            />
+          ) : (
+            <span
+              className="rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2 text-sm font-medium tabular-nums text-[var(--text-primary)]"
+              aria-label={`Ventas del día ${formatDayColombia(listDayYyyyMmDd)}`}
+            >
+              {formatDayColombia(listDayYyyyMmDd)}
+            </span>
+          )}
         </div>
       </div>
 
-      <SalesRegisterForm onRegistered={loadSales} />
+      <SalesRegisterForm
+        onRegistered={loadSales}
+        saleDateForNewSales={isAdmin ? listDayYyyyMmDd : undefined}
+      />
 
       {summary.length > 0 && (
         <section className="glass rounded-xl border border-[var(--border)] p-5">
@@ -118,7 +138,7 @@ export function SalesPageClient() {
               No hay ventas de bebidas para esta fecha.
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <table className="table-zebra w-full text-sm">
               <thead>
                 <tr className="border-b border-[var(--border)] bg-[var(--bg-surface)]">
                   <th className="px-5 py-3 text-left font-semibold text-[var(--text-primary)]">Fecha y hora</th>
@@ -134,7 +154,7 @@ export function SalesPageClient() {
                   return (
                     <tr
                       key={sale.id}
-                      className="border-b border-[var(--border)] transition-colors last:border-0 hover:bg-[var(--bg-surface)]/50"
+                      className="border-b border-[var(--border)] transition-colors duration-150 last:border-0 hover:bg-[var(--bg-surface)]/50"
                     >
                       <td className="whitespace-nowrap px-5 py-3 text-[var(--text-primary)]">
                         {formatDateTimeColombia(sale.DateSale)}
@@ -175,7 +195,7 @@ export function SalesPageClient() {
               No hay ventas del billar para esta fecha.
             </div>
           ) : (
-            <table className="w-full text-sm">
+            <table className="table-zebra w-full text-sm">
               <thead>
                 <tr className="border-b border-[var(--border)] bg-[var(--bg-surface)]">
                   <th className="px-5 py-3 text-left font-semibold text-[var(--text-primary)]">Fecha y hora</th>
@@ -191,7 +211,7 @@ export function SalesPageClient() {
                   return (
                     <tr
                       key={sale.id}
-                      className="border-b border-[var(--border)] transition-colors last:border-0 hover:bg-[var(--bg-surface)]/50"
+                      className="border-b border-[var(--border)] transition-colors duration-150 last:border-0 hover:bg-[var(--bg-surface)]/50"
                     >
                       <td className="whitespace-nowrap px-5 py-3 text-[var(--text-primary)]">
                         {formatDateTimeColombia(sale.DateSale)}

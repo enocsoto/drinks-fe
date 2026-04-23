@@ -6,7 +6,7 @@ import { getDailyClosingData, downloadDailyClosingPdf } from '@/lib/api/reports.
 import type { DailyClosingData } from '@/types/reports.types';
 import { todayColombia } from '@/lib/date-colombia';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { DateInput } from '@/components/ui/date-input';
 import { TableSkeleton } from '../_components/table-skeleton';
 
 function formatCop(value: number): string {
@@ -70,29 +70,29 @@ export default function ClosingPage() {
 
   return (
     <AdminGuard>
-      <div className="space-y-6 animate-fadeIn">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
+      <div className="min-w-0 space-y-6 animate-fadeIn">
+        <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Cierre del día</h1>
-            <p className="text-[var(--text-muted)] text-sm mt-0.5">
+            <p className="mt-0.5 break-words text-sm text-[var(--text-muted)]">
               Cuadre de ventas y generación del documento de cierre (PDF)
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-              Fecha
-              <Input
-                type="date"
+          <div className="flex w-full min-w-0 flex-wrap items-center gap-3 sm:w-auto">
+            <label className="flex w-full min-w-0 flex-col gap-1.5 text-sm text-[var(--text-secondary)] sm:w-auto sm:flex-row sm:items-center sm:gap-2">
+              <span className="shrink-0">Fecha</span>
+              <DateInput
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-[160px] bg-[var(--bg-surface)] border-[var(--border)] text-[var(--text-primary)]"
+                onValueChange={setDate}
+                aria-label="Fecha de cierre"
+                className="w-full min-w-0 bg-[var(--bg-surface)] sm:w-[min(100%,12rem)] sm:min-w-[10.5rem]"
               />
             </label>
             <Button
               type="button"
               onClick={handleGeneratePdf}
               disabled={pdfLoading}
-              className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-h)] text-white shrink-0"
+              className="w-full min-h-10 shrink-0 bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary-h)] sm:w-auto"
             >
               {pdfLoading ? (
                 <>
@@ -136,7 +136,7 @@ export default function ClosingPage() {
           ) : (
             <>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="table-zebra w-full text-sm">
                   <thead>
                     <tr className="border-b border-[var(--border)] bg-[var(--bg-elevated)]">
                       <th className="text-left py-3 px-4 font-semibold text-[var(--text-primary)]">Producto</th>

@@ -4,6 +4,25 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import type { SalesByPeriodResponse } from '@/types/analytics.types';
 import { SkeletonCard } from './skeleton-card';
 
+function ChartTrendIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M3 3v18h18" />
+      <path d="M7 12l4-4 4 4 5-5" />
+      <path d="M20 6v4h-4" />
+    </svg>
+  );
+}
+
 interface Props {
   data: SalesByPeriodResponse | null;
   loading: boolean;
@@ -40,7 +59,9 @@ export function MonthlyRetentionCard({ data, loading }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-sm">📈</span>
+          <span className="text-[var(--brand-primary)] shrink-0" aria-hidden>
+            <ChartTrendIcon className="h-5 w-5" />
+          </span>
           <div>
             <p className="text-sm font-semibold text-[var(--text-primary)]">Ventas Mensuales</p>
             <p className="text-[10px] text-[var(--text-muted)]">Año {new Date().getFullYear()} · actualizado hace 1h</p>

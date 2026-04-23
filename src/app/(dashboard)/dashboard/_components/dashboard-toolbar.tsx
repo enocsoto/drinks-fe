@@ -49,7 +49,7 @@ export function DashboardToolbar({ periodTab, onPeriodTabChange, onExportPdf }: 
       <button
         type="button"
         onClick={onExportPdf}
-        className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 py-2.5 text-sm font-semibold text-[var(--text-on-brand)] shadow-md transition-opacity hover:opacity-90"
+        className="inline-flex w-full min-h-10 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 py-2.5 text-sm font-semibold text-[var(--text-on-brand)] shadow-md transition-opacity hover:opacity-90 sm:w-auto"
       >
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />

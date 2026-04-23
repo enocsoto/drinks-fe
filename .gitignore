@@ -32,10 +32,52 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
 
+# Skills de IDEs y agentes (cualquier ruta: .cursor/skills, skills en raíz, .agents/skills, etc.)
+**/skills/
+
+# Otros asistentes / CLIs que enlazan skills (npx skills add); no versionar
+.crush/
+.junie/
+.mux/
+.qwen/
+.openhands/
+.pochi/
+.trae/
+.windsurf/
+.bob/
+.mcpjam/
+.cortex/
+.qoder/
+.roo/
+.goose/
+.neovate/
+.opencode/
+.amp/
+.antigravity/
+.cline/
+.codex/
+.augent/
+.copilot/
+.codebuddy/
+.openclaw/
+.ibm-bob/
+.kilocode/
+.kiro/
+.pi/
+.refact/
+.fusion/
+.trae-cn/
+.onyx/
+.gemini/
+.warp/
+.raycast/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.cursor/

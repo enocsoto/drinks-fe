@@ -186,15 +186,15 @@ export default function InventoryPage() {
 
   return (
     <AdminGuard>
-      <div className="space-y-6 animate-fadeIn">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
+      <div className="min-w-0 space-y-6 animate-fadeIn">
+        <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Inventario de bebidas</h1>
-            <p className="text-[var(--text-muted)] text-sm mt-0.5">
+            <p className="mt-0.5 break-words text-sm text-[var(--text-muted)]">
               Gestiona la cantidad de cada bebida. Crear, editar cantidad y eliminar.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex w-full min-w-0 flex-wrap gap-2 sm:w-auto sm:justify-end">
             <Link href="/beverages">
               <Button variant="outline" size="sm" type="button">
                 Catálogo
@@ -275,7 +275,7 @@ export default function InventoryPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full table-fixed border-collapse text-sm">
+              <table className="table-zebra w-full table-fixed border-collapse text-sm">
                 <colgroup>
                   <col className="w-[5%]" />
                   <col className="w-[19%]" />
